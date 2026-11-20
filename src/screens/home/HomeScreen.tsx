@@ -190,11 +190,12 @@ export const HomeScreen: React.FC = () => {
             <View style={styles.heroRight}>
               <CircularGauge
                 value={78}
-                size={104}
-                strokeWidth={8}
+                size={92}
+                strokeWidth={7}
                 trackColor={isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.28)'}
                 progressColor="#FFFFFF"
                 textColor="#FFFFFF"
+                fontSize={20}
               />
             </View>
           </LinearGradient>
@@ -708,7 +709,8 @@ const styles = StyleSheet.create({
   heroCard: {
     width: '100%',
     borderRadius: 24,
-    padding: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -716,47 +718,47 @@ const styles = StyleSheet.create({
   },
   heroLeft: {
     flex: 1,
-    paddingRight: 10,
+    paddingRight: 8,
   },
   heroTag: {
     color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 11.5,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.8,
   },
   heroTitle: {
     color: '#FFFFFF',
-    fontSize: 24,
+    fontSize: 21,
     fontWeight: '800',
     letterSpacing: -0.4,
-    marginTop: 4,
+    marginTop: 3,
   },
   heroSub: {
     color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 13.5,
-    lineHeight: 19,
-    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 4,
   },
   heroButton: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 18,
-    height: 42,
-    borderRadius: 14,
+    paddingHorizontal: 14,
+    height: 36,
+    borderRadius: 12,
     alignSelf: 'flex-start',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 18,
+    marginTop: 12,
   },
   heroButtonText: {
     color: '#101828',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
   heroRight: {
-    marginLeft: 8,
-    width: 104,
-    height: 104,
+    marginLeft: 6,
+    width: 92,
+    height: 92,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',

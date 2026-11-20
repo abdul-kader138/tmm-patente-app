@@ -4,27 +4,30 @@ import Svg, { Circle } from 'react-native-svg';
 
 export interface CircularGaugeProps {
   value: number; // e.g. 78
-  size?: number; // e.g. 104
-  strokeWidth?: number; // e.g. 8
+  size?: number; // e.g. 92
+  strokeWidth?: number; // e.g. 7
   trackColor?: string; // e.g. 'rgba(255, 255, 255, 0.28)'
   progressColor?: string; // e.g. '#FFFFFF'
   textColor?: string; // e.g. '#FFFFFF'
+  fontSize?: number;
   showPercentSign?: boolean;
 }
 
 export const CircularGauge: React.FC<CircularGaugeProps> = ({
   value = 78,
-  size = 104,
-  strokeWidth = 8,
+  size = 92,
+  strokeWidth = 7,
   trackColor = 'rgba(255, 255, 255, 0.28)',
   progressColor = '#FFFFFF',
   textColor = '#FFFFFF',
+  fontSize,
   showPercentSign = true,
 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const clampedValue = Math.max(0, Math.min(100, value));
   const strokeDashoffset = circumference - (circumference * clampedValue) / 100;
+  const calculatedFontSize = fontSize ?? Math.round(size * 0.22);
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -53,7 +56,7 @@ export const CircularGauge: React.FC<CircularGaugeProps> = ({
         />
       </Svg>
       <View style={styles.textContainer}>
-        <Text style={[styles.valueText, { color: textColor }]}>
+        <Text style={[styles.valueText, { color: textColor, fontSize: calculatedFontSize }]}>
           {Math.round(clampedValue)}
           {showPercentSign ? '%' : ''}
         </Text>
