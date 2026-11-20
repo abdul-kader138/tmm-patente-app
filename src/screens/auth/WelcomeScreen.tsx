@@ -23,17 +23,20 @@ export const WelcomeScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
   const { colors, isDark } = useTheme();
 
-  // Responsive calculations based on screen dimensions and aspect ratio lock (700:696)
+  // Mockup is 780×1688px at 2x = 390×844pt (iPhone 14 frame)
+  // All measurements below are derived from pixel analysis of the mockup
   const horizontalPadding = 20;
-  const maxAllowedWidth = Math.min(width - horizontalPadding * 2, 420);
-  const maxAllowedHeight = height * 0.44;
+  const contentWidth = width - horizontalPadding * 2; // ~350pt on iPhone 14
 
-  let cardWidth = maxAllowedWidth;
-  let cardHeight = cardWidth * (696 / 700);
+  // Hero card: 696px tall / 700px wide at 2x = 348pt / 350pt
+  const cardWidth = Math.min(contentWidth, 350);
+  const cardAspect = 696 / 700; // almost square
+  let cardHeight = cardWidth * cardAspect;
 
-  if (cardHeight > maxAllowedHeight) {
-    cardHeight = maxAllowedHeight;
-    cardWidth = cardHeight * (700 / 696);
+  // On very short screens, cap and re-derive width
+  const maxCardHeight = height * 0.42;
+  if (cardHeight > maxCardHeight) {
+    cardHeight = maxCardHeight;
   }
 
   const heroImage = isDark
@@ -46,67 +49,59 @@ export const WelcomeScreen: React.FC = () => {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: Math.max(insets.top, 16),
-            paddingBottom: Math.max(insets.bottom, 16) + 12,
+            paddingTop: Math.max(insets.top, 16) + 4,
+            paddingBottom: Math.max(insets.bottom, 16),
           },
         ]}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        {/* Top Hero Section */}
+        {/* Hero Card (road signs illustration) */}
         <View style={styles.topContainer}>
-          {/* Flat Road Sign Graphic Card matching mockup */}
           <View
             style={[
               styles.heroCardContainer,
-              {
-                width: cardWidth,
-                height: cardHeight,
-              },
+              { width: cardWidth, height: cardHeight },
             ]}
           >
             <Image
               source={heroImage}
               style={styles.heroImage}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </View>
 
-          {/* Typography Header */}
-          <View style={[styles.textBlock, { width: cardWidth }]}>
+          {/* Title + Subtitle */}
+          <View style={[styles.textBlock, { maxWidth: cardWidth }]}>
             <Text
               style={[
                 styles.title,
                 { color: isDark ? '#FFFFFF' : '#0B1220' },
               ]}
-              numberOfLines={2}
-              adjustsFontSizeToFit
             >
               Your Italian driving licence,{'\n'}in your language
             </Text>
-
             <Text
               style={[
                 styles.subtitle,
                 { color: isDark ? '#94A3B8' : '#475569' },
               ]}
             >
-              Official ministerial quizzes, video lessons and audio explanations
-              in Bangla and English.
+              Official ministerial quizzes, video lessons and{'\n'}audio
+              explanations in Bangla and English.
             </Text>
           </View>
         </View>
 
-        {/* Action Buttons Section */}
-        <View style={[styles.actionContainer, { width: cardWidth }]}>
-          {/* Continue with Google */}
+        {/* Auth Buttons + Phone Link */}
+        <View style={[styles.actionContainer, { maxWidth: cardWidth }]}>
+          {/* Continue with Google — 43pt height */}
           <TouchableOpacity
             style={[
-              styles.authButton,
+              styles.googleButton,
               {
-                backgroundColor: isDark ? '#161B26' : '#FFFFFF',
-                borderColor: isDark ? '#262F40' : '#E2E8F0',
-                borderWidth: 1,
+                backgroundColor: isDark ? '#131A2A' : '#FFFFFF',
+                borderColor: isDark ? '#1E2740' : '#E2E8F0',
               },
             ]}
             activeOpacity={0.85}
@@ -114,25 +109,23 @@ export const WelcomeScreen: React.FC = () => {
             accessibilityLabel="Continue with Google"
             onPress={() => navigation.navigate('Language')}
           >
-            <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.authIcon} />
+            <Text style={[styles.googleG, { color: '#4285F4' }]}>G</Text>
             <Text
               style={[
                 styles.authButtonText,
-                { color: isDark ? '#FFFFFF' : '#0B1220' },
+                { color: isDark ? '#F2F4F8' : '#0B1220' },
               ]}
             >
               Continue with Google
             </Text>
           </TouchableOpacity>
 
-          {/* Continue with Apple */}
+          {/* Continue with Apple — 47pt height */}
           <TouchableOpacity
             style={[
-              styles.authButton,
+              styles.appleButton,
               {
-                backgroundColor: isDark ? '#FFFFFF' : '#0B1220',
-                borderColor: isDark ? '#FFFFFF' : '#0B1220',
-                borderWidth: 1,
+                backgroundColor: isDark ? '#F2F4F8' : '#0B1220',
               },
             ]}
             activeOpacity={0.85}
@@ -142,9 +135,9 @@ export const WelcomeScreen: React.FC = () => {
           >
             <Ionicons
               name="logo-apple"
-              size={22}
+              size={20}
               color={isDark ? '#0B1220' : '#FFFFFF'}
-              style={styles.authIcon}
+              style={styles.appleIcon}
             />
             <Text
               style={[
@@ -168,7 +161,10 @@ export const WelcomeScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Footer / QR code login */}
+        {/* Spacer to push footer down */}
+        <View style={styles.spacer} />
+
+        {/* Footer — QR code login */}
         <TouchableOpacity
           style={styles.footerContainer}
           activeOpacity={0.75}
@@ -179,12 +175,12 @@ export const WelcomeScreen: React.FC = () => {
           <Ionicons
             name="qr-code-outline"
             size={16}
-            color={isDark ? '#64748B' : '#94A3B8'}
+            color={isDark ? '#475569' : '#94A3B8'}
           />
           <Text
             style={[
               styles.footerText,
-              { color: isDark ? '#64748B' : '#94A3B8' },
+              { color: isDark ? '#475569' : '#94A3B8' },
             ]}
           >
             Studying on another device? Scan to log in
@@ -202,7 +198,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
   },
   topContainer: {
@@ -210,51 +205,61 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   heroCardContainer: {
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
     alignSelf: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   heroImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 24,
   },
   textBlock: {
     alignSelf: 'center',
-    marginBottom: 24,
+    width: '100%',
+    marginBottom: 32,
   },
   title: {
-    fontSize: 27,
+    fontSize: 26,
     fontWeight: '800',
-    letterSpacing: -0.6,
-    lineHeight: 34,
+    letterSpacing: -0.5,
+    lineHeight: 33,
     marginBottom: 10,
-    textAlign: 'left',
   },
   subtitle: {
     fontSize: 15,
     fontWeight: '400',
     lineHeight: 22,
-    letterSpacing: -0.2,
-    textAlign: 'left',
+    letterSpacing: -0.1,
   },
   actionContainer: {
     width: '100%',
-    gap: 12,
     alignSelf: 'center',
-    marginBottom: 16,
+    gap: 12,
   },
-  authButton: {
-    height: 52,
+  googleButton: {
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  googleG: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  appleButton: {
+    height: 50,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 16,
+    gap: 8,
   },
-  authIcon: {
-    marginRight: 10,
+  appleIcon: {
+    marginTop: -1,
   },
   authButtonText: {
     fontSize: 16,
@@ -264,7 +269,7 @@ const styles = StyleSheet.create({
   phoneButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   phoneButtonText: {
     color: '#3B82F6',
@@ -272,13 +277,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: -0.2,
   },
+  spacer: {
+    flex: 1,
+    minHeight: 40,
+  },
   footerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 8,
-    alignSelf: 'center',
+    paddingVertical: 12,
   },
   footerText: {
     fontSize: 13,
