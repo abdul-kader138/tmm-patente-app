@@ -7,14 +7,13 @@ import {
   TouchableOpacity,
   Image,
   useWindowDimensions,
-  Platform,
-  StatusBar as RNStatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
+import { getHeaderTopInset } from '../../utils/safeArea';
 import { Ionicons } from '@expo/vector-icons';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -25,10 +24,7 @@ export const HomeScreen: React.FC = () => {
   const { width } = useWindowDimensions();
   const { isDark } = useTheme();
 
-  const statusBarOffset =
-    Platform.OS === 'android'
-      ? Math.max(RNStatusBar.currentHeight || 0, insets.top, 28) + 16
-      : Math.max(insets.top, 44) + 12;
+  const statusBarOffset = getHeaderTopInset(insets, 16);
 
   const horizontalMargin = 20;
   const contentWidth = Math.min(width - horizontalMargin * 2, 420);
@@ -59,7 +55,7 @@ export const HomeScreen: React.FC = () => {
                   { backgroundColor: isDark ? '#1B2547' : '#EFF4FF' },
                 ]}
                 activeOpacity={0.8}
-                onPress={() => (navigation as any).navigate('MainTabs', { screen: 'Me' })}
+                onPress={() => navigation.navigate('MainTabs', { screen: 'Me' })}
                 accessibilityRole="button"
                 accessibilityLabel="Go to profile"
               >
@@ -317,7 +313,7 @@ export const HomeScreen: React.FC = () => {
                     borderColor: isDark ? '#1E2740' : '#EAECF0',
                   },
                 ]}
-                onPress={() => (navigation as any).navigate('MainTabs', { screen: 'Dictionary' })}
+                onPress={() => navigation.navigate('MainTabs', { screen: 'Dictionary' })}
                 activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel="Dictionary, 1900 words"

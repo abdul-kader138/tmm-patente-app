@@ -1,5 +1,15 @@
+import { NavigatorScreenParams } from '@react-navigation/native';
+
+export type MainTabParamList = {
+  Home: undefined;
+  Learn: undefined;
+  Practice: undefined;
+  Dictionary: undefined;
+  Me: undefined;
+};
+
 export type RootStackParamList = {
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   Welcome: undefined;
   Language: undefined;
   VideoLessons: undefined;
@@ -22,12 +32,4 @@ export type RootStackParamList = {
   PracticalDriving: undefined;
   CarParts: undefined;
   DrivingGuide: undefined;
-};
-
-export type MainTabParamList = {
-  Home: undefined;
-  Learn: undefined;
-  Practice: undefined;
-  Dictionary: undefined;
-  Me: undefined;
 };

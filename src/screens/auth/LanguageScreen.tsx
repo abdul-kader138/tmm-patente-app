@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
+import { getHeaderTopInset } from '../../utils/safeArea';
 import { Ionicons } from '@expo/vector-icons';
 
 if (
@@ -85,10 +86,7 @@ export const LanguageScreen: React.FC = () => {
     ? require('../../../assets/mockup-art/translate-icon-dark.png')
     : require('../../../assets/mockup-art/translate-icon-light.png');
 
-  const statusBarOffset =
-    Platform.OS === 'android'
-      ? Math.max(RNStatusBar.currentHeight || 0, insets.top, 28) + 14
-      : Math.max(insets.top, 44) + 10;
+  const statusBarOffset = getHeaderTopInset(insets, 14);
 
   return (
     <View style={[styles.root, { backgroundColor: isDark ? '#0A0E18' : '#F5F7FB' }]}>
@@ -150,7 +148,7 @@ export const LanguageScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity
-          onPress={() => navigation.navigate('MainTabs')}
+          onPress={() => navigation.replace('MainTabs')}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="Skip"
@@ -375,7 +373,7 @@ export const LanguageScreen: React.FC = () => {
               backgroundColor: isDark ? '#5B7CFF' : '#2D5BFF',
             },
           ]}
-          onPress={() => navigation.navigate('MainTabs')}
+          onPress={() => navigation.replace('MainTabs')}
           activeOpacity={0.85}
           accessibilityRole="button"
           accessibilityLabel="Continue"

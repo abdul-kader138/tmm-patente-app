@@ -55,7 +55,7 @@ export const MainTabNavigator: React.FC = () => {
             <View
               style={[
                 styles.iconContainer,
-                focused && [styles.activePill, { backgroundColor: activePillBg }],
+                focused && { backgroundColor: activePillBg },
               ]}
             >
               <Ionicons
@@ -77,7 +77,7 @@ export const MainTabNavigator: React.FC = () => {
             <View
               style={[
                 styles.iconContainer,
-                focused && [styles.activePill, { backgroundColor: activePillBg }],
+                focused && { backgroundColor: activePillBg },
               ]}
             >
               <Ionicons
@@ -99,7 +99,7 @@ export const MainTabNavigator: React.FC = () => {
             <View
               style={[
                 styles.iconContainer,
-                focused && [styles.activePill, { backgroundColor: activePillBg }],
+                focused && { backgroundColor: activePillBg },
               ]}
             >
               <Ionicons
@@ -121,7 +121,7 @@ export const MainTabNavigator: React.FC = () => {
             <View
               style={[
                 styles.iconContainer,
-                focused && [styles.activePill, { backgroundColor: activePillBg }],
+                focused && { backgroundColor: activePillBg },
               ]}
             >
               <Ionicons
@@ -143,7 +143,7 @@ export const MainTabNavigator: React.FC = () => {
             <View
               style={[
                 styles.iconContainer,
-                focused && [styles.activePill, { backgroundColor: activePillBg }],
+                focused && { backgroundColor: activePillBg },
               ]}
             >
               <Ionicons
@@ -165,9 +165,6 @@ const styles = StyleSheet.create({
     height: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 15,
-  },
-  activePill: {
     borderRadius: 15,
   },
 });

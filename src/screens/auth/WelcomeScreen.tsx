@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
+import { getHeaderTopInset } from '../../utils/safeArea';
 import { Ionicons } from '@expo/vector-icons';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Welcome'>;
@@ -36,10 +37,7 @@ export const WelcomeScreen: React.FC = () => {
     ? require('../../../assets/mockup-art/welcome-hero-dark.png')
     : require('../../../assets/mockup-art/welcome-hero-light.png');
 
-  const statusBarOffset =
-    Platform.OS === 'android'
-      ? Math.max(RNStatusBar.currentHeight || 0, insets.top, 28) + 16
-      : Math.max(insets.top, 44) + 12;
+  const statusBarOffset = getHeaderTopInset(insets, 16);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
