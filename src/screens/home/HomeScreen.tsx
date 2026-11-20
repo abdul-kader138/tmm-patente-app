@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
 import { getHeaderTopInset } from '../../utils/safeArea';
@@ -139,11 +140,11 @@ export const HomeScreen: React.FC = () => {
           </View>
 
           {/* Hero Card: Exam Readiness */}
-          <View
-            style={[
-              styles.heroCard,
-              { backgroundColor: isDark ? '#1D3BB8' : '#2D5BFF' },
-            ]}
+          <LinearGradient
+            colors={isDark ? ['#152E9B', '#234CD8'] : ['#1E41DA', '#305DFF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroCard}
           >
             <View style={styles.heroLeft}>
               <Text style={styles.heroTag}>EXAM READINESS</Text>
@@ -166,12 +167,13 @@ export const HomeScreen: React.FC = () => {
             {/* Circular Readiness Gauge */}
             <View style={styles.heroRight}>
               <Image
-                source={gaugeImage}
+                source={require('../../../assets/mockup-art/gauge-ring-vector.png')}
                 style={styles.gaugeImage}
                 resizeMode="contain"
               />
+              <Text style={styles.gaugeText}>78%</Text>
             </View>
-          </View>
+          </LinearGradient>
 
           {/* 6-Grid Feature Cards (3 columns x 2 rows) */}
           <View style={styles.gridContainer}>
@@ -728,12 +730,22 @@ const styles = StyleSheet.create({
   },
   heroRight: {
     marginLeft: 8,
+    width: 104,
+    height: 104,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   gaugeImage: {
-    width: 106,
-    height: 106,
+    width: 104,
+    height: 104,
+  },
+  gaugeText: {
+    position: 'absolute',
+    color: '#FFFFFF',
+    fontSize: 25,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   gridContainer: {
     width: '100%',
