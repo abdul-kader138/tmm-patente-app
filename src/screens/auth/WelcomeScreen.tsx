@@ -41,7 +41,7 @@ export const WelcomeScreen: React.FC = () => {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: Math.max(insets.top, 16) + 4,
+            paddingTop: Math.max(insets.top, 24) + 16,
             paddingBottom: Math.max(insets.bottom, 16) + 8,
           },
         ]}
