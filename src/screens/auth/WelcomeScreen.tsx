@@ -8,6 +8,7 @@ import {
   ScrollView,
   useWindowDimensions,
   Platform,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -35,13 +36,18 @@ export const WelcomeScreen: React.FC = () => {
     ? require('../../../assets/mockup-art/welcome-hero-dark.png')
     : require('../../../assets/mockup-art/welcome-hero-light.png');
 
+  const statusBarOffset =
+    Platform.OS === 'android'
+      ? Math.max(RNStatusBar.currentHeight || 0, insets.top, 28) + 16
+      : Math.max(insets.top, 44) + 12;
+
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: Math.max(insets.top, 24) + 16,
+            paddingTop: statusBarOffset,
             paddingBottom: Math.max(insets.bottom, 16) + 8,
           },
         ]}

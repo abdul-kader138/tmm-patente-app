@@ -10,6 +10,7 @@ import {
   LayoutAnimation,
   UIManager,
   Platform,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -84,6 +85,11 @@ export const LanguageScreen: React.FC = () => {
     ? require('../../../assets/mockup-art/translate-icon-dark.png')
     : require('../../../assets/mockup-art/translate-icon-light.png');
 
+  const statusBarOffset =
+    Platform.OS === 'android'
+      ? Math.max(RNStatusBar.currentHeight || 0, insets.top, 28) + 14
+      : Math.max(insets.top, 44) + 10;
+
   return (
     <View style={[styles.root, { backgroundColor: isDark ? '#0A0E18' : '#F5F7FB' }]}>
       {/* Top Header Bar */}
@@ -91,7 +97,7 @@ export const LanguageScreen: React.FC = () => {
         style={[
           styles.headerBar,
           {
-            paddingTop: Math.max(insets.top, 16) + 4,
+            paddingTop: statusBarOffset,
           },
         ]}
       >
@@ -144,7 +150,7 @@ export const LanguageScreen: React.FC = () => {
         </View>
 
         <TouchableOpacity
-          onPress={() => navigation.replace('MainTabs')}
+          onPress={() => navigation.navigate('MainTabs')}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="Skip"
@@ -369,7 +375,7 @@ export const LanguageScreen: React.FC = () => {
               backgroundColor: isDark ? '#5B7CFF' : '#2D5BFF',
             },
           ]}
-          onPress={() => navigation.replace('MainTabs')}
+          onPress={() => navigation.navigate('MainTabs')}
           activeOpacity={0.85}
           accessibilityRole="button"
           accessibilityLabel="Continue"
