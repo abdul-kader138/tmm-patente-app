@@ -254,6 +254,7 @@ export const VideoLessonsScreen: React.FC = () => {
                 style={StyleSheet.absoluteFill}
                 viewBox="0 0 350 168"
                 preserveAspectRatio="none"
+                pointerEvents="none"
               >
                 <Path
                   d="M 0 55 C 25 48, 55 48, 85 58 C 115 68, 128 85, 132 115 C 134 135, 134.5 152, 135 168 L 0 168 Z"
