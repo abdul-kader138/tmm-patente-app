@@ -163,7 +163,11 @@ export const HomeScreen: React.FC = () => {
 
           {/* Hero Card: Exam Readiness */}
           <LinearGradient
-            colors={isDark ? ['#152E9B', '#234CD8'] : ['#1E41DA', '#305DFF']}
+            colors={
+              isDark
+                ? ['#152657', '#1F3A9E', '#3253D9']
+                : ['#1D3ED6', '#2F5BFF', '#5679FF']
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroCard}
@@ -192,7 +196,7 @@ export const HomeScreen: React.FC = () => {
                 value={78}
                 size={92}
                 strokeWidth={7}
-                trackColor={isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.28)'}
+                trackColor="rgba(255, 255, 255, 0.20)"
                 progressColor="#FFFFFF"
                 textColor="#FFFFFF"
                 fontSize={20}
