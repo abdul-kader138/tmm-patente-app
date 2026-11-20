@@ -1,7 +1,7 @@
 # Design Specification: Screen-by-Screen Mockup-Fidelity Overhaul
 
 **Date:** 2026-11-20  
-**Status:** In Review  
+**Status:** Approved by Engineering / Builder Review Incorporated  
 **Project:** TMM Patente Mobile App (React Native / Expo SDK 58)  
 **Approaches Evaluated:**
 - **Approach 1 (Selected):** Screen-by-Screen Live Interactive Iteration. Inspect individual mockup pairs (`Screens/Light` & `Screens/Dark`), re-engineer the screen to match pixel-perfect details, verify live on device, execute code review, obtain user approval, and proceed sequentially.
@@ -11,7 +11,7 @@
 ---
 
 ## 1. Intent & Purpose
-The user has their physical phone connected to Expo Go and requires the TMM Bangla Patente mobile application to match the exact visual fidelity of the provided 27 mockups in `Screens/Light` and `Screens/Dark`. The previous scaffolding used generic placeholders; this overhaul replaces every screen with pixel-perfect layouts, responsive typography, precise color tokens, accurate SVG/vector graphics, and robust aspect ratio handling across Android and iOS devices.
+The user has their physical phone connected to Expo Go and requires the TMM Bangla Patente mobile application to match the exact visual fidelity of the provided 27 mockups in `Screens/Light` and `Screens/Dark`. The previous scaffolding used generic placeholders; this overhaul replaces every screen with pixel-perfect layouts, responsive typography, precise color tokens, accurate graphics, and robust aspect ratio handling across Android and iOS devices.
 
 ---
 
@@ -22,7 +22,10 @@ The user has their physical phone connected to Expo Go and requires the TMM Bang
 2. **Screen-by-Screen Cadence:** Complete one screen at a time starting from Screen 1 (`A1 Welcome`). Do not proceed to the next screen until the user has checked and approved the current screen on their live phone.
 3. **Platform Responsiveness (iOS & Android):** Utilize `react-native-safe-area-context` (`useSafeAreaInsets`), responsive sizing, and platform-specific styling to ensure identical aspect ratios and no content clipping on notched screens, dynamic islands, or Android navigation bars.
 4. **Adaptive Dark & Light Modes:** Seamless transition matching exact hex codes from light and dark mockups.
-5. **Code Review Discipline:** Run automated validation (`npx tsc --noEmit`) and dispatch a code reviewer subagent after each screen implementation before seeking user sign-off.
+5. **Developer Verification Tools (`__DEV__`):**
+   - Floating theme switcher pill (`☀️ / 🌙`) visible only in `__DEV__` to test Light & Dark instantly without changing OS settings.
+   - Route switcher / dev selector to jump to any screen instantly for isolated inspection.
+6. **Code Review Discipline:** Run automated validation (`npx tsc --noEmit`) and dispatch a code reviewer subagent after each screen implementation before seeking user sign-off.
 
 ### Non-Goals
 - Modifying backend REST endpoints or database structures.
@@ -34,21 +37,26 @@ The user has their physical phone connected to Expo Go and requires the TMM Bang
 
 ---
 
-## 3. Screen 1 Focus: `A1 Welcome` (First Iteration)
+## 3. Builder Review Decisions
+1. **Asset Sourcing Strategy:**
+   - For complex artwork/hero illustrations (like the A1 Welcome road sign card, D2 road signs, F4 car parts), we extract/slice high-resolution lossless PNG assets directly from the official mockups into `assets/mockup-art/` ensuring 100% artwork precision matching the Figma designer's exact curves and shadows.
+2. **Interactivity Level:**
+   - Every screen is fully interactive (buttons trigger navigation, inputs accept text, tabs switch, theme toggles work) backed by the rich mock/live API data already configured.
+3. **Live Device Preview Navigation:**
+   - In `RootNavigator`, we can point `initialRouteName` directly to the active screen under development (or provide a floating Dev Route Launcher button), so the user's phone immediately reloads to the exact screen being perfected.
+4. **Floating Theme Switcher:**
+   - A floating pill in `App.tsx` (only in `__DEV__`) lets the user tap once to toggle between Light and Dark mode instantly on their phone.
+
+---
+
+## 4. Screen 1 Focus: `A1 Welcome` (Current Task)
 
 ### Visual Elements (Light & Dark)
 1. **Top Road Sign Hero Card:**
-   - Deep royal blue card container (`#2563EB` to `#1D4ED8`) with 24px corner radius.
-   - Road signs composite:
-     - Octagonal STOP sign (red `#DC2626` with white border & text).
-     - No-entry circle (red with horizontal white bar).
-     - Inverted Yield triangle (white with thick red border).
-     - Railway level crossing warning triangle (red border, white field, black crossing tracks).
-     - Blue directional circle (solid blue `#2563EB` with bold white arrow pointing up).
-     - Speed limit 50 circle (white disc, bold red border, black "50").
-     - VERO/True verification pill (white/light green container `#E6F4EA`, green bold "VERO", subtle subtext "True").
+   - Extracted high-resolution hero asset for Light and Dark modes.
+   - Rounded corners (`borderRadius: 24`), clean margin and aspect ratio handling.
 2. **Typography & Content:**
-   - Title: **"Your Italian driving licence, in your language"** (Bold, ~28-30px, tight line height).
+   - Title: **"Your Italian driving licence, in your language"** (Bold, ~28-30px, tight line height, proper font weight).
    - Subtitle: **"Official ministerial quizzes, video lessons and audio explanations in Bangla and English."** (Medium gray, 15px, comfortable line height).
 3. **Auth Actions:**
    - **Continue with Google:**
@@ -65,12 +73,12 @@ The user has their physical phone connected to Expo Go and requires the TMM Bang
 
 ---
 
-## 4. Execution Workflow per Screen
+## 5. Execution Workflow per Screen
 ```
 [Inspect Light & Dark Mockup]
        │
        ▼
-[Build Vector Graphics & Pixel-Perfect Screen Component]
+[Extract Assets & Build Pixel-Perfect Screen Component]
        │
        ▼
 [Verify TypeScript Compilation & Hot Reload on Device]
@@ -84,11 +92,3 @@ The user has their physical phone connected to Expo Go and requires the TMM Bang
        ▼
 [Upon Approval -> Proceed to Next Screen]
 ```
-
----
-
-## 5. Next Screens in Queue
-- **Screen 1:** `A1 Welcome` (Current)
-- **Screen 2:** `A2 Language`
-- **Screen 3:** `B1 Home`
-- **Subsequent:** `B2`-`B5`, `C1`-`C6`, `D1`-`D4`, `E1`-`E5`, `F1`-`F5`.
