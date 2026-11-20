@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -20,15 +20,40 @@ import { getHeaderTopInset } from '../../utils/safeArea';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-// --- PURE VECTOR SVG ROAD SIGNS ---
+/* -------------------------------------------------------------------------- */
+/*  Design tokens (measured from the mockup, 1dp = 2px)                       */
+/* -------------------------------------------------------------------------- */
 
-/** Railway Level Crossing Danger Sign (passaggio a livello con barriere) */
+const HORIZONTAL_MARGIN = 20;
+const MAX_CONTENT_WIDTH = 420;
+
+const palette = (isDark: boolean) => ({
+  bg: isDark ? '#0A0E18' : '#F5F7FB',
+  textPrimary: isDark ? '#FFFFFF' : '#101828',
+  textMuted: isDark ? '#8E95A5' : '#9AA3B5',
+  surface: isDark ? '#141A29' : '#FFFFFF',
+  border: isDark ? '#222A3E' : '#E6EAF2',
+  searchIcon: isDark ? '#CBD5E1' : '#101828',
+  chipText: isDark ? '#94A3B8' : '#475467',
+  accent: '#2D5BFF',
+  badgeBg: isDark ? 'rgba(45, 91, 255, 0.2)' : '#EAF0FF',
+  badgeText: isDark ? '#5B7CFF' : '#2D5BFF',
+  actionBg: isDark ? '#1E293B' : '#EDF0F7',
+  downloadIcon: isDark ? '#94A3B8' : '#475569',
+  lockIcon: isDark ? '#64748B' : '#9AA3B5',
+  success: '#10B981',
+});
+
+/* -------------------------------------------------------------------------- */
+/*  Pure vector road signs                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** Railway level crossing danger sign (with barrier) */
 const LevelCrossingSign: React.FC<{ width?: number; height?: number }> = ({
   width = 100,
   height = 87.5,
 }) => (
   <Svg width={width} height={height} viewBox="0 0 200 175">
-    {/* Outer Red Danger Triangle with rounded corners */}
     <Polygon
       points="100,4 196,172 4,172"
       fill="#D82D20"
@@ -37,25 +62,23 @@ const LevelCrossingSign: React.FC<{ width?: number; height?: number }> = ({
       strokeLinejoin="round"
       strokeLinecap="round"
     />
-    {/* Inner White Triangle */}
     <Polygon points="100,43 163,152 37,152" fill="#FFFFFF" />
-    {/* Top horizontal fence rail */}
+    {/* rails */}
     <Rect x={58} y={105} width={84} height={9} fill="#111827" />
-    {/* Bottom horizontal fence rail */}
     <Rect x={58} y={128} width={84} height={9} fill="#111827" />
-    {/* 5 vertical fence pickets */}
+    {/* 5 evenly spaced pickets: 62 → 135, pitch 18.25 */}
     <Rect x={62} y={94} width={7} height={49} fill="#111827" />
-    <Rect x={81} y={94} width={7} height={49} fill="#111827" />
-    <Rect x={100} y={94} width={7} height={49} fill="#111827" />
-    <Rect x={120} y={94} width={7} height={49} fill="#111827" />
+    <Rect x={80.25} y={94} width={7} height={49} fill="#111827" />
+    <Rect x={98.5} y={94} width={7} height={49} fill="#111827" />
+    <Rect x={116.75} y={94} width={7} height={49} fill="#111827" />
     <Rect x={135} y={94} width={7} height={49} fill="#111827" />
   </Svg>
 );
 
-/** General Danger Exclamation Sign (!) */
+/** General danger sign (!) */
 const DangerSign: React.FC<{ width?: number; height?: number }> = ({
-  width = 45,
-  height = 42,
+  width = 40,
+  height = 37.5,
 }) => (
   <Svg width={width} height={height} viewBox="0 0 45 42">
     <Path
@@ -71,10 +94,10 @@ const DangerSign: React.FC<{ width?: number; height?: number }> = ({
   </Svg>
 );
 
-/** Inverted Yield / Give Way Sign */
+/** Inverted yield / give way sign */
 const YieldSign: React.FC<{ width?: number; height?: number }> = ({
-  width = 45,
-  height = 42,
+  width = 40,
+  height = 37.5,
 }) => (
   <Svg width={width} height={height} viewBox="0 0 45 42">
     <Path
@@ -88,12 +111,18 @@ const YieldSign: React.FC<{ width?: number; height?: number }> = ({
   </Svg>
 );
 
+/* -------------------------------------------------------------------------- */
+/*  Data                                                                      */
+/* -------------------------------------------------------------------------- */
+
+type LessonStatus = 'watched' | 'downloaded' | 'locked';
+
 interface VideoLessonItem {
   id: number;
   lessonNumber: number;
   title: string;
   duration: string;
-  status: 'watched' | 'downloaded' | 'locked';
+  status: LessonStatus;
   gradient: [string, string];
   signType: 'danger' | 'yield';
 }
@@ -105,7 +134,7 @@ const LESSON_ITEMS: VideoLessonItem[] = [
     title: 'Curves, slopes and narrow roads',
     duration: '14:05',
     status: 'watched',
-    gradient: ['#90221E', '#C62A20'],
+    gradient: ['#8E1F1C', '#CB2C20'],
     signType: 'danger',
   },
   {
@@ -114,7 +143,7 @@ const LESSON_ITEMS: VideoLessonItem[] = [
     title: 'Intersections and give way',
     duration: '16:22',
     status: 'downloaded',
-    gradient: ['#61299F', '#724BDD'],
+    gradient: ['#5E2A9E', '#7650DE'],
     signType: 'yield',
   },
   {
@@ -123,12 +152,22 @@ const LESSON_ITEMS: VideoLessonItem[] = [
     title: 'Roadworks and slippery road',
     duration: '12:48',
     status: 'locked',
-    gradient: ['#8C5406', '#D27B08'],
+    gradient: ['#8A5006', '#E58C0A'],
     signType: 'danger',
   },
 ];
 
+const STATUS_LABEL: Record<LessonStatus, string> = {
+  watched: 'Watched',
+  downloaded: 'Downloaded',
+  locked: 'Full version',
+};
+
 const CATEGORIES = ['All', 'Signs', 'Right of way', 'Overtaking', 'Speed'];
+
+/* -------------------------------------------------------------------------- */
+/*  Screen                                                                    */
+/* -------------------------------------------------------------------------- */
 
 export const VideoLessonsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -138,34 +177,31 @@ export const VideoLessonsScreen: React.FC = () => {
 
   const [activeCategory, setActiveCategory] = useState('All');
 
-  const statusBarOffset = getHeaderTopInset(insets, 16);
-  const horizontalMargin = 20;
-  const contentWidth = Math.min(width - horizontalMargin * 2, 420);
+  const colors = useMemo(() => palette(isDark), [isDark]);
+
+  // Mockup: title block starts ~4dp below the status bar
+  const statusBarOffset = getHeaderTopInset(insets, 4);
+  const contentWidth = Math.min(width - HORIZONTAL_MARGIN * 2, MAX_CONTENT_WIDTH);
 
   const handleOpenLesson = (lessonId: number, title: string) => {
     navigation.navigate('LessonPlayer', { lessonId, title });
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: isDark ? '#0A0E18' : '#F5F7FB' }]}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          {
-            paddingTop: statusBarOffset,
-            paddingBottom: 40,
-          },
+          { paddingTop: statusBarOffset, paddingBottom: 40 },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.mainContent, { width: contentWidth }]}>
-          {/* Top Header */}
+        <View style={{ width: contentWidth }}>
+          {/* ------------------------------ Header ------------------------------ */}
           <View style={styles.topHeader}>
             <View style={styles.headerTitles}>
-              <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#101828' }]}>
-                Lessons
-              </Text>
-              <Text style={[styles.subtitle, { color: isDark ? '#8E95A5' : '#64748B' }]}>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>Lessons</Text>
+              <Text style={[styles.subtitle, { color: colors.textMuted }]}>
                 124 videos in Bangla · 31 h
               </Text>
             </View>
@@ -173,23 +209,21 @@ export const VideoLessonsScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.searchButton,
-                {
-                  backgroundColor: isDark ? '#141A29' : '#FFFFFF',
-                  borderColor: isDark ? '#222A3E' : '#E2E8F0',
-                },
+                { backgroundColor: colors.surface, borderColor: isDark ? colors.border : '#EEF1F7' },
               ]}
               activeOpacity={0.8}
               accessibilityRole="button"
               accessibilityLabel="Search video lessons"
             >
-              <Search size={20} color={isDark ? '#CBD5E1' : '#1E293B'} strokeWidth={2.2} />
+              <Search size={18} color={colors.searchIcon} strokeWidth={2.2} />
             </TouchableOpacity>
           </View>
 
-          {/* Horizontal Category Filter Chips */}
+          {/* --------------------------- Category chips ------------------------- */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.categoryScroll}
             contentContainerStyle={styles.categoryContainer}
           >
             {CATEGORIES.map((cat) => {
@@ -198,17 +232,16 @@ export const VideoLessonsScreen: React.FC = () => {
                 <TouchableOpacity
                   key={cat}
                   onPress={() => setActiveCategory(cat)}
+                  hitSlop={{ top: 10, bottom: 10, left: 2, right: 2 }}
                   style={[
                     styles.categoryChip,
                     isActive
-                      ? styles.activeChip
-                      : [
-                          styles.inactiveChip,
-                          {
-                            backgroundColor: isDark ? '#141A29' : '#FFFFFF',
-                            borderColor: isDark ? '#222A3E' : '#E2E8F0',
-                          },
-                        ],
+                      ? { backgroundColor: colors.accent }
+                      : {
+                          backgroundColor: colors.surface,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        },
                   ]}
                   activeOpacity={0.8}
                   accessibilityRole="button"
@@ -218,11 +251,8 @@ export const VideoLessonsScreen: React.FC = () => {
                     style={[
                       styles.categoryText,
                       isActive
-                        ? styles.activeCategoryText
-                        : [
-                            styles.inactiveCategoryText,
-                            { color: isDark ? '#94A3B8' : '#334155' },
-                          ],
+                        ? styles.categoryTextActive
+                        : { color: colors.chipText, fontWeight: '600' },
                     ]}
                   >
                     {cat}
@@ -232,7 +262,7 @@ export const VideoLessonsScreen: React.FC = () => {
             })}
           </ScrollView>
 
-          {/* Featured / Continue Watching Hero Card */}
+          {/* ------------------------- Featured / hero card --------------------- */}
           <TouchableOpacity
             style={styles.featuredCard}
             onPress={() =>
@@ -242,103 +272,61 @@ export const VideoLessonsScreen: React.FC = () => {
             accessibilityRole="button"
             accessibilityLabel="Featured lesson 12, Level crossings and how to approach them"
           >
-            {/* Thumbnail Banner */}
             <LinearGradient
-              colors={['#1F3D95', '#2953E3']}
+              colors={['#1E3A8F', '#2B55E8']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.featuredThumbnail}
             >
-              {/* Illustrated Vector Backdrop Texture */}
-              <Svg
-                style={StyleSheet.absoluteFill}
-                viewBox="0 0 350 168"
-                preserveAspectRatio="none"
-                pointerEvents="none"
-              >
-                <Path
-                  d="M 0 55 C 25 48, 55 48, 85 58 C 115 68, 128 85, 132 115 C 134 135, 134.5 152, 135 168 L 0 168 Z"
-                  fill="rgba(255, 255, 255, 0.15)"
-                />
-              </Svg>
+              {/* Perfect circle, clipped by the card (overflow: hidden) */}
+              <View style={styles.heroBackdropCircle} />
 
-              {/* White Play Button Overlay */}
+              {/* Play button */}
               <View style={styles.heroPlayButton}>
                 <Svg width={10} height={12} viewBox="0 0 10 12" style={{ marginLeft: 2 }}>
                   <Polygon points="1,1 9,6 1,11" fill="#111827" />
                 </Svg>
               </View>
 
-              {/* Road Sign Graphic on Right */}
+              {/* Level crossing sign */}
               <View style={styles.heroSignContainer}>
                 <LevelCrossingSign width={100} height={87.5} />
               </View>
 
-              {/* Duration Badge */}
+              {/* Duration */}
               <View style={styles.durationBadge}>
                 <Text style={styles.durationText}>18:40</Text>
               </View>
 
-              {/* Progress Bar along bottom edge */}
+              {/* Progress */}
               <View style={styles.progressBarTrack}>
                 <View style={[styles.progressBarFill, { width: '34%' }]} />
               </View>
             </LinearGradient>
 
-            {/* Content Below Thumbnail */}
             <View style={styles.featuredMeta}>
-              <Text
-                style={[
-                  styles.featuredTitle,
-                  { color: isDark ? '#FFFFFF' : '#101828' },
-                ]}
-              >
+              <Text style={[styles.featuredTitle, { color: colors.textPrimary }]}>
                 Lesson 12 · Level crossings and how to approach them
               </Text>
 
               <View style={styles.badgeRow}>
-                <View
-                  style={[
-                    styles.langBadge,
-                    {
-                      backgroundColor: isDark
-                        ? 'rgba(45, 91, 255, 0.2)'
-                        : '#EFF4FF',
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.langBadgeText,
-                      { color: isDark ? '#5B7CFF' : '#2D5BFF' },
-                    ]}
-                  >
+                <View style={[styles.langBadge, { backgroundColor: colors.badgeBg }]}>
+                  <Text style={[styles.langBadgeText, { color: colors.badgeText }]}>
                     Bangla
                   </Text>
                 </View>
-                <Text
-                  style={[
-                    styles.linkedMetaText,
-                    { color: isDark ? '#8E95A5' : '#64748B' },
-                  ]}
-                >
+                <Text style={[styles.linkedMetaText, { color: colors.textMuted }]}>
                   6 min left · 24 linked questions
                 </Text>
               </View>
             </View>
           </TouchableOpacity>
 
-          {/* Chapter Section Header */}
-          <Text
-            style={[
-              styles.sectionHeader,
-              { color: isDark ? '#8E95A5' : '#64748B' },
-            ]}
-          >
+          {/* ------------------------------ Chapter ----------------------------- */}
+          <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>
             CHAPTER 2 · DANGER SIGNS
           </Text>
 
-          {/* Video List Items */}
           <View style={styles.listContainer}>
             {LESSON_ITEMS.map((item) => (
               <TouchableOpacity
@@ -358,91 +346,50 @@ export const VideoLessonsScreen: React.FC = () => {
                   end={{ x: 1, y: 1 }}
                   style={styles.itemThumbnail}
                 >
-                  {/* Decorative background circle */}
                   <View style={styles.itemThumbnailCurve} />
 
-                  {/* Play circle */}
                   <View style={styles.itemPlayCircle}>
                     <Svg width={8} height={10} viewBox="0 0 8 10" style={{ marginLeft: 1.5 }}>
                       <Polygon points="1,1 7,5 1,9" fill="#111827" />
                     </Svg>
                   </View>
 
-                  {/* Sign icon */}
                   <View style={styles.itemSignContainer}>
-                    {item.signType === 'yield' ? (
-                      <YieldSign width={45} height={42} />
-                    ) : (
-                      <DangerSign width={45} height={42} />
-                    )}
+                    {item.signType === 'yield' ? <YieldSign /> : <DangerSign />}
                   </View>
                 </LinearGradient>
 
-                {/* Text Content */}
+                {/* Text */}
                 <View style={styles.itemInfo}>
-                  <Text
-                    style={[
-                      styles.itemLessonTag,
-                      { color: isDark ? '#8E95A5' : '#64748B' },
-                    ]}
-                  >
+                  <Text style={[styles.itemLessonTag, { color: colors.textMuted }]}>
                     Lesson {item.lessonNumber}
                   </Text>
                   <Text
-                    style={[
-                      styles.itemTitle,
-                      { color: isDark ? '#FFFFFF' : '#101828' },
-                    ]}
+                    style={[styles.itemTitle, { color: colors.textPrimary }]}
                     numberOfLines={2}
                   >
                     {item.title}
                   </Text>
-                  <Text
-                    style={[
-                      styles.itemMeta,
-                      { color: isDark ? '#8E95A5' : '#64748B' },
-                    ]}
-                  >
-                    {item.duration} ·{' '}
-                    {item.status === 'watched'
-                      ? 'Watched'
-                      : item.status === 'downloaded'
-                      ? 'Downloaded'
-                      : 'Full version'}
+                  <Text style={[styles.itemMeta, { color: colors.textMuted }]}>
+                    {item.duration} · {STATUS_LABEL[item.status]}
                   </Text>
                 </View>
 
-                {/* Right Status / Action Icon */}
+                {/* Status icon */}
                 <View style={styles.itemActionContainer}>
-                  {item.status === 'watched' ? (
-                    <View style={styles.watchedIconCircle}>
-                      <Check size={14} color="#FFFFFF" strokeWidth={3} />
+                  {item.status === 'watched' && (
+                    <View style={[styles.watchedIconCircle, { backgroundColor: colors.success }]}>
+                      <Check size={13} color="#FFFFFF" strokeWidth={3} />
                     </View>
-                  ) : item.status === 'downloaded' ? (
-                    <View
-                      style={[
-                        styles.actionIconCircle,
-                        { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
-                      ]}
-                    >
-                      <Download
-                        size={15}
-                        color={isDark ? '#94A3B8' : '#64748B'}
-                        strokeWidth={2.2}
-                      />
+                  )}
+                  {item.status === 'downloaded' && (
+                    <View style={[styles.actionIconCircle, { backgroundColor: colors.actionBg }]}>
+                      <Download size={14} color={colors.downloadIcon} strokeWidth={2.2} />
                     </View>
-                  ) : (
-                    <View
-                      style={[
-                        styles.actionIconCircle,
-                        { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' },
-                      ]}
-                    >
-                      <Lock
-                        size={14}
-                        color={isDark ? '#64748B' : '#94A3B8'}
-                        strokeWidth={2.2}
-                      />
+                  )}
+                  {item.status === 'locked' && (
+                    <View style={[styles.actionIconCircle, { backgroundColor: colors.actionBg }]}>
+                      <Lock size={13} color={colors.lockIcon} strokeWidth={2.2} />
                     </View>
                   )}
                 </View>
@@ -455,6 +402,10 @@ export const VideoLessonsScreen: React.FC = () => {
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/*  Styles                                                                    */
+/* -------------------------------------------------------------------------- */
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -462,69 +413,70 @@ const styles = StyleSheet.create({
   scrollContent: {
     alignItems: 'center',
   },
-  mainContent: {
-    width: '100%',
-  },
+
+  /* Header */
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   headerTitles: {
     flex: 1,
   },
   title: {
     fontSize: 28,
+    lineHeight: 34,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 13.5,
+    lineHeight: 18,
     fontWeight: '500',
-    marginTop: 3,
+    marginTop: 2,
   },
   searchButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
   },
+
+  /* Chips */
+  categoryScroll: {
+    flexGrow: 0,
+    marginBottom: 14,
+  },
   categoryContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    paddingBottom: 4,
-    marginBottom: 18,
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    height: 36,
-    borderRadius: 18,
+    height: 25,
+    paddingHorizontal: 10,
+    borderRadius: 12.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeChip: {
-    backgroundColor: '#2555FF',
-  },
-  inactiveChip: {
-    borderWidth: 1,
-  },
   categoryText: {
     fontSize: 13,
+    lineHeight: 16,
+    includeFontPadding: false,
   },
-  activeCategoryText: {
+  categoryTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
   },
-  inactiveCategoryText: {
-    fontWeight: '600',
-  },
+
+  /* Hero */
   featuredCard: {
     width: '100%',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   featuredThumbnail: {
     width: '100%',
@@ -533,15 +485,24 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
+  heroBackdropCircle: {
+    position: 'absolute',
+    left: -72,
+    top: 50,
+    width: 206,
+    height: 206,
+    borderRadius: 103,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
   heroPlayButton: {
     position: 'absolute',
-    left: 72,
+    left: 76,
     top: '50%',
     marginTop: -22,
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -552,20 +513,18 @@ const styles = StyleSheet.create({
   },
   heroSignContainer: {
     position: 'absolute',
-    right: 87.5,
-    top: 40,
+    right: 84,
+    top: 39,
     width: 100,
     height: 87.5,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   durationBadge: {
     position: 'absolute',
-    bottom: 8,
-    right: 8,
+    right: 6,
+    bottom: 7,
     width: 46,
-    height: 22,
-    borderRadius: 11,
+    height: 21,
+    borderRadius: 10.5,
     backgroundColor: '#101E3C',
     alignItems: 'center',
     justifyContent: 'center',
@@ -589,12 +548,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF4D4F',
   },
   featuredMeta: {
-    marginTop: 12,
+    marginTop: 10,
   },
   featuredTitle: {
-    fontSize: 16.5,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: '700',
-    lineHeight: 22,
     letterSpacing: -0.2,
   },
   badgeRow: {
@@ -603,32 +562,35 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   langBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 8,
     marginRight: 8,
   },
   langBadgeText: {
     fontSize: 11.5,
+    lineHeight: 14,
     fontWeight: '700',
   },
   linkedMetaText: {
     fontSize: 12.5,
     fontWeight: '500',
   },
+
+  /* Chapter list */
   sectionHeader: {
-    fontSize: 11.5,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '700',
     letterSpacing: 0.8,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   listContainer: {
-    gap: 10,
+    gap: 14,
   },
   lessonItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
   },
   itemThumbnail: {
     width: 108,
@@ -636,73 +598,73 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     position: 'relative',
-    justifyContent: 'center',
   },
   itemThumbnailCurve: {
     position: 'absolute',
-    left: -20,
-    bottom: -20,
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    left: -44,
+    top: 38,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
   itemPlayCircle: {
     position: 'absolute',
-    left: 18.5,
+    left: 16,
     top: '50%',
     marginTop: -14,
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   itemSignContainer: {
     position: 'absolute',
-    right: 12,
+    right: 21,
     top: '50%',
-    marginTop: -21,
-    width: 45,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginTop: -18.75,
+    width: 40,
+    height: 37.5,
   },
   itemInfo: {
     flex: 1,
-    paddingHorizontal: 14,
+    paddingLeft: 12,
+    paddingRight: 14,
   },
   itemLessonTag: {
     fontSize: 11,
+    lineHeight: 14,
     fontWeight: '600',
   },
   itemTitle: {
     fontSize: 13.5,
+    lineHeight: 18,
     fontWeight: '700',
     marginTop: 2,
-    lineHeight: 18,
   },
   itemMeta: {
     fontSize: 11.5,
-    marginTop: 3,
+    lineHeight: 14,
     fontWeight: '500',
+    marginTop: 2,
   },
   itemActionContainer: {
-    paddingRight: 4,
+    width: 28,
+    alignItems: 'flex-end',
   },
   watchedIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#10B981',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
