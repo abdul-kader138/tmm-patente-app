@@ -173,7 +173,7 @@ export const WelcomeScreen: React.FC = () => {
           onPress={() => navigation.replace('MainTabs')}
         >
           <Image
-            source={require('../../../assets/mockup-art/qr-icon.png')}
+            source={require('../../../assets/mockup-art/qr-icon-sharp.png')}
             style={[
               styles.qrIcon,
               { tintColor: isDark ? '#6B7690' : '#98A2B3' },
@@ -283,8 +283,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   qrIcon: {
-    width: 15,
-    height: 15,
+    width: 16,
+    height: 16,
   },
   footerText: {
     fontSize: 13,
