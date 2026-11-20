@@ -31,14 +31,14 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const RootNavigator: React.FC = () => {
   return (
     <Stack.Navigator
-      initialRouteName="MainTabs"
+      initialRouteName="Welcome"
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
       }}
     >
-      <Stack.Screen name="MainTabs" component={MainTabNavigator} />
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="MainTabs" component={MainTabNavigator} />
       <Stack.Screen name="Language" component={LanguageScreen} />
       
       {/* Learn & Content */}

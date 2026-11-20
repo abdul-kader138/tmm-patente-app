@@ -17,6 +17,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
 import { getHeaderTopInset } from '../../utils/safeArea';
 import { Ionicons } from '@expo/vector-icons';
+import { QrCode } from 'lucide-react-native';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Welcome'>;
 
@@ -176,13 +177,11 @@ export const WelcomeScreen: React.FC = () => {
           accessibilityLabel="Scan QR code to log in"
           onPress={() => navigation.replace('MainTabs')}
         >
-          <Image
-            source={require('../../../assets/mockup-art/qr-icon-sharp.png')}
-            style={[
-              styles.qrIcon,
-              { tintColor: isDark ? '#6B7690' : '#98A2B3' },
-            ]}
-            resizeMode="contain"
+          <QrCode
+            size={18}
+            color={isDark ? '#6B7690' : '#98A2B3'}
+            strokeWidth={2}
+            style={styles.qrIcon}
           />
           <Text
             style={[
