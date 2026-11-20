@@ -7,7 +7,6 @@ import {
   Image,
   ScrollView,
   useWindowDimensions,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -24,10 +23,18 @@ export const WelcomeScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
   const { colors, isDark } = useTheme();
 
-  // Responsive calculations based on screen dimensions
+  // Responsive calculations based on screen dimensions and aspect ratio lock (700:696)
   const horizontalPadding = 20;
-  const cardWidth = Math.min(width - horizontalPadding * 2, 420);
-  const cardHeight = Math.min(cardWidth * (696 / 700), height * 0.44);
+  const maxAllowedWidth = Math.min(width - horizontalPadding * 2, 420);
+  const maxAllowedHeight = height * 0.44;
+
+  let cardWidth = maxAllowedWidth;
+  let cardHeight = cardWidth * (696 / 700);
+
+  if (cardHeight > maxAllowedHeight) {
+    cardHeight = maxAllowedHeight;
+    cardWidth = cardHeight * (700 / 696);
+  }
 
   const heroImage = isDark
     ? require('../../../assets/mockup-art/welcome-hero-dark.png')
@@ -48,15 +55,13 @@ export const WelcomeScreen: React.FC = () => {
       >
         {/* Top Hero Section */}
         <View style={styles.topContainer}>
-          {/* Road Sign Graphic Card */}
+          {/* Flat Road Sign Graphic Card matching mockup */}
           <View
             style={[
               styles.heroCardContainer,
               {
                 width: cardWidth,
                 height: cardHeight,
-                shadowColor: isDark ? '#000' : '#2563EB',
-                shadowOpacity: isDark ? 0.3 : 0.12,
               },
             ]}
           >
@@ -105,6 +110,8 @@ export const WelcomeScreen: React.FC = () => {
               },
             ]}
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
             onPress={() => navigation.navigate('Language')}
           >
             <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.authIcon} />
@@ -129,6 +136,8 @@ export const WelcomeScreen: React.FC = () => {
               },
             ]}
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Apple"
             onPress={() => navigation.navigate('Language')}
           >
             <Ionicons
@@ -151,6 +160,8 @@ export const WelcomeScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.phoneButton}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Use phone number"
             onPress={() => navigation.navigate('Language')}
           >
             <Text style={styles.phoneButtonText}>Use phone number</Text>
@@ -161,6 +172,8 @@ export const WelcomeScreen: React.FC = () => {
         <TouchableOpacity
           style={styles.footerContainer}
           activeOpacity={0.75}
+          accessibilityRole="button"
+          accessibilityLabel="Scan QR code to log in"
           onPress={() => navigation.replace('MainTabs')}
         >
           <Ionicons
@@ -201,9 +214,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignSelf: 'center',
     marginBottom: 20,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
-    elevation: 4,
   },
   heroImage: {
     width: '100%',
@@ -242,11 +252,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   authIcon: {
     marginRight: 10,

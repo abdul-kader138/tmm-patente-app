@@ -1,13 +1,21 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  Platform,
+  StatusBar as RNStatusBar,
+} from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
 const FloatingDevThemeToggle: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
+  const insets = useSafeAreaInsets();
 
   if (!__DEV__) return null;
 
@@ -16,12 +24,15 @@ const FloatingDevThemeToggle: React.FC = () => {
       style={[
         styles.floatingToggle,
         {
+          top: Math.max(insets.top, 16) + 4,
           backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
           borderColor: isDark ? '#334155' : '#E2E8F0',
         },
       ]}
       onPress={toggleTheme}
       activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
     >
       <Text style={styles.toggleIcon}>{isDark ? '☀️' : '🌙'}</Text>
       <Text style={[styles.toggleText, { color: isDark ? '#F8FAFC' : '#0F172A' }]}>
@@ -33,6 +44,13 @@ const FloatingDevThemeToggle: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { isDark, colors } = useTheme();
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      (RNStatusBar as any).setTranslucent?.(true);
+      (RNStatusBar as any).setBackgroundColor?.('transparent', true);
+    }
+  }, []);
 
   const navigationTheme = {
     ...(isDark ? DarkTheme : DefaultTheme),
@@ -72,7 +90,6 @@ const styles = StyleSheet.create({
   },
   floatingToggle: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 54 : 40,
     right: 16,
     zIndex: 9999,
     flexDirection: 'row',
