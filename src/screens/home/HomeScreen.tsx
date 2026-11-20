@@ -16,6 +16,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
 import { getHeaderTopInset } from '../../utils/safeArea';
 import { Ionicons } from '@expo/vector-icons';
+import { CircularGauge } from '../../components/common/CircularGauge';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -29,10 +30,6 @@ export const HomeScreen: React.FC = () => {
 
   const horizontalMargin = 20;
   const contentWidth = Math.min(width - horizontalMargin * 2, 420);
-
-  const gaugeImage = isDark
-    ? require('../../../assets/mockup-art/gauge-ring-dark.png')
-    : require('../../../assets/mockup-art/gauge-ring-light.png');
 
   return (
     <View style={[styles.root, { backgroundColor: isDark ? '#0A0E18' : '#F5F7FB' }]}>
@@ -164,16 +161,15 @@ export const HomeScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Circular Readiness Gauge */}
+            {/* Pure Code-Driven SVG Circular Readiness Gauge */}
             <View style={styles.heroRight}>
-              <Image
-                source={
-                  isDark
-                    ? require('../../../assets/mockup-art/gauge-ring-dark.png')
-                    : require('../../../assets/mockup-art/gauge-ring-light.png')
-                }
-                style={styles.gaugeImage}
-                resizeMode="contain"
+              <CircularGauge
+                value={78}
+                size={104}
+                strokeWidth={8}
+                trackColor={isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.28)'}
+                progressColor="#FFFFFF"
+                textColor="#FFFFFF"
               />
             </View>
           </LinearGradient>
