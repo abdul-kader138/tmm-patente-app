@@ -15,8 +15,27 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
 import { getHeaderTopInset } from '../../utils/safeArea';
-import { Ionicons } from '@expo/vector-icons';
+import Svg, { Rect, Polygon } from 'react-native-svg';
+import {
+  Flame,
+  Bell,
+  LayoutGrid,
+  Clock,
+  BookOpen,
+  Users,
+  TriangleAlert,
+  Trophy,
+  Headphones,
+  Play,
+} from 'lucide-react-native';
 import { CircularGauge } from '../../components/common/CircularGauge';
+
+const LessonsVideoIcon: React.FC<{ color: string; size?: number }> = ({ color, size = 20 }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect x="2" y="4" width="20" height="16" rx="4" stroke={color} strokeWidth="2" />
+    <Polygon points="10,8.5 16,12 10,15.5" fill={color} />
+  </Svg>
+);
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -94,7 +113,7 @@ export const HomeScreen: React.FC = () => {
                   { backgroundColor: isDark ? '#261F1A' : '#FFF7ED' },
                 ]}
               >
-                <Ionicons name="flame" size={17} color="#F97316" />
+                <Flame size={16} color="#F97316" fill="#F97316" />
                 <Text
                   style={[
                     styles.streakText,
@@ -119,10 +138,10 @@ export const HomeScreen: React.FC = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Notifications"
               >
-                <Ionicons
-                  name="notifications-outline"
-                  size={20}
+                <Bell
+                  size={19}
                   color={isDark ? '#FFFFFF' : '#101828'}
+                  strokeWidth={2}
                 />
                 <View
                   style={[
@@ -198,10 +217,9 @@ export const HomeScreen: React.FC = () => {
                     { backgroundColor: isDark ? '#1A2544' : '#EFF4FF' },
                   ]}
                 >
-                  <Ionicons
-                    name="play"
-                    size={18}
+                  <LessonsVideoIcon
                     color={isDark ? '#5B7CFF' : '#2D5BFF'}
+                    size={20}
                   />
                 </View>
                 <Text
@@ -242,7 +260,7 @@ export const HomeScreen: React.FC = () => {
                     { backgroundColor: isDark ? '#231C3D' : '#F5F3FF' },
                   ]}
                 >
-                  <Ionicons name="grid" size={18} color="#8B5CF6" />
+                  <LayoutGrid size={20} color="#8B5CF6" strokeWidth={2} />
                 </View>
                 <Text
                   style={[
@@ -282,7 +300,7 @@ export const HomeScreen: React.FC = () => {
                     { backgroundColor: isDark ? '#142C24' : '#ECFDF5' },
                   ]}
                 >
-                  <Ionicons name="time" size={18} color="#10B981" />
+                  <Clock size={20} color="#10B981" strokeWidth={2} />
                 </View>
                 <Text
                   style={[
@@ -325,7 +343,7 @@ export const HomeScreen: React.FC = () => {
                     { backgroundColor: isDark ? '#2E2514' : '#FFFBEB' },
                   ]}
                 >
-                  <Ionicons name="book" size={18} color="#F59E0B" />
+                  <BookOpen size={20} color="#F59E0B" strokeWidth={2} />
                 </View>
                 <Text
                   style={[
@@ -366,7 +384,7 @@ export const HomeScreen: React.FC = () => {
                       { backgroundColor: isDark ? '#301B1E' : '#FEF2F2' },
                     ]}
                   >
-                    <Ionicons name="people" size={18} color="#EF4444" />
+                    <Users size={20} color="#EF4444" strokeWidth={2} />
                   </View>
                   <View style={styles.liveTag}>
                     <Text style={styles.liveTagText}>LIVE</Text>
@@ -410,10 +428,10 @@ export const HomeScreen: React.FC = () => {
                     { backgroundColor: isDark ? '#16223C' : '#EFF6FF' },
                   ]}
                 >
-                  <Ionicons
-                    name="warning"
-                    size={18}
+                  <TriangleAlert
+                    size={20}
                     color={isDark ? '#5B7CFF' : '#2D5BFF'}
+                    strokeWidth={2}
                   />
                 </View>
                 <Text
@@ -456,7 +474,7 @@ export const HomeScreen: React.FC = () => {
                 { backgroundColor: isDark ? '#5B7CFF' : '#2D5BFF' },
               ]}
             >
-              <Ionicons name="play" size={20} color="#FFFFFF" style={{ marginLeft: 2 }} />
+              <Play size={18} color="#FFFFFF" fill="#FFFFFF" style={{ marginLeft: 2 }} />
             </View>
             <View style={styles.continueInfo}>
               <Text
@@ -527,7 +545,7 @@ export const HomeScreen: React.FC = () => {
                   { backgroundColor: isDark ? '#2E2514' : '#FFFBEB' },
                 ]}
               >
-                <Ionicons name="trophy" size={18} color="#F59E0B" />
+                <Trophy size={20} color="#F59E0B" strokeWidth={2} />
               </View>
               <Text
                 style={[
@@ -568,7 +586,7 @@ export const HomeScreen: React.FC = () => {
                     { backgroundColor: isDark ? '#142C24' : '#ECFDF5' },
                   ]}
                 >
-                  <Ionicons name="headset" size={18} color="#10B981" />
+                  <Headphones size={20} color="#10B981" strokeWidth={2} />
                 </View>
                 <View style={styles.badgeNumber}>
                   <Text style={styles.badgeNumberText}>2</Text>

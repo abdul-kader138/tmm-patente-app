@@ -4,7 +4,15 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MainTabParamList } from './types';
 import { useTheme } from '../theme/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
+import Svg, { Rect, Polygon } from 'react-native-svg';
+import { Home, CheckSquare, BookOpen, User } from 'lucide-react-native';
+
+const TabVideoIcon: React.FC<{ color: string; size?: number }> = ({ color, size = 22 }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect x="2" y="4" width="20" height="16" rx="4" stroke={color} strokeWidth="2" />
+    <Polygon points="10,8.5 16,12 10,15.5" fill={color} />
+  </Svg>
+);
 
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { VideoLessonsScreen } from '../screens/learn/VideoLessonsScreen';
@@ -58,10 +66,10 @@ export const MainTabNavigator: React.FC = () => {
                 focused && { backgroundColor: activePillBg },
               ]}
             >
-              <Ionicons
-                name={focused ? 'home' : 'home-outline'}
+              <Home
                 size={22}
                 color={focused ? activeColor : inactiveColor}
+                strokeWidth={focused ? 2.5 : 2}
               />
             </View>
           ),
@@ -80,10 +88,9 @@ export const MainTabNavigator: React.FC = () => {
                 focused && { backgroundColor: activePillBg },
               ]}
             >
-              <Ionicons
-                name={focused ? 'play-circle' : 'play-circle-outline'}
-                size={22}
+              <TabVideoIcon
                 color={focused ? activeColor : inactiveColor}
+                size={22}
               />
             </View>
           ),
@@ -102,10 +109,10 @@ export const MainTabNavigator: React.FC = () => {
                 focused && { backgroundColor: activePillBg },
               ]}
             >
-              <Ionicons
-                name={focused ? 'checkbox' : 'checkbox-outline'}
+              <CheckSquare
                 size={22}
                 color={focused ? activeColor : inactiveColor}
+                strokeWidth={focused ? 2.5 : 2}
               />
             </View>
           ),
@@ -124,10 +131,10 @@ export const MainTabNavigator: React.FC = () => {
                 focused && { backgroundColor: activePillBg },
               ]}
             >
-              <Ionicons
-                name={focused ? 'book' : 'book-outline'}
+              <BookOpen
                 size={22}
                 color={focused ? activeColor : inactiveColor}
+                strokeWidth={focused ? 2.5 : 2}
               />
             </View>
           ),
@@ -146,10 +153,10 @@ export const MainTabNavigator: React.FC = () => {
                 focused && { backgroundColor: activePillBg },
               ]}
             >
-              <Ionicons
-                name={focused ? 'person' : 'person-outline'}
+              <User
                 size={22}
                 color={focused ? activeColor : inactiveColor}
+                strokeWidth={focused ? 2.5 : 2}
               />
             </View>
           ),
