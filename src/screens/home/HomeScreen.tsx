@@ -167,11 +167,14 @@ export const HomeScreen: React.FC = () => {
             {/* Circular Readiness Gauge */}
             <View style={styles.heroRight}>
               <Image
-                source={require('../../../assets/mockup-art/gauge-ring-vector.png')}
+                source={
+                  isDark
+                    ? require('../../../assets/mockup-art/gauge-ring-dark.png')
+                    : require('../../../assets/mockup-art/gauge-ring-light.png')
+                }
                 style={styles.gaugeImage}
                 resizeMode="contain"
               />
-              <Text style={styles.gaugeText}>78%</Text>
             </View>
           </LinearGradient>
 
