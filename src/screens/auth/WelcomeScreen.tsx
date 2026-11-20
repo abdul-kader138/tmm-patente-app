@@ -283,8 +283,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   qrIcon: {
-    width: 16,
-    height: 16,
+    width: 17,
+    height: 17,
   },
   footerText: {
     fontSize: 13,
