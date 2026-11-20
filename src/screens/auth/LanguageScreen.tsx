@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,24 @@ import {
   ScrollView,
   Image,
   useWindowDimensions,
+  LayoutAnimation,
+  UIManager,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Language'>;
 
@@ -34,14 +44,38 @@ const LANGUAGES: LangItem[] = [
   { code: 'it', badge: 'IT', name: 'Italiano', description: 'Original exam wording only' },
 ];
 
+const STORAGE_LANG_KEY = '@tmm_patente_selected_lang';
+const STORAGE_ITALIAN_SIDE_KEY = '@tmm_patente_italian_side_by_side';
+
 export const LanguageScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
 
   const [selectedLang, setSelectedLang] = useState('en');
   const [italianSideBySide, setItalianSideBySide] = useState(true);
+
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_LANG_KEY).then((lang) => {
+      if (lang) setSelectedLang(lang);
+    });
+    AsyncStorage.getItem(STORAGE_ITALIAN_SIDE_KEY).then((val) => {
+      if (val !== null) setItalianSideBySide(val === 'true');
+    });
+  }, []);
+
+  const handleSelectLang = (code: string) => {
+    setSelectedLang(code);
+    AsyncStorage.setItem(STORAGE_LANG_KEY, code);
+  };
+
+  const handleToggleItalian = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    const nextVal = !italianSideBySide;
+    setItalianSideBySide(nextVal);
+    AsyncStorage.setItem(STORAGE_ITALIAN_SIDE_KEY, String(nextVal));
+  };
 
   const horizontalMargin = 20;
   const contentWidth = Math.min(width - horizontalMargin * 2, 400);
@@ -177,10 +211,11 @@ export const LanguageScreen: React.FC = () => {
                       borderWidth: isSelected ? 2 : 1,
                     },
                   ]}
-                  onPress={() => setSelectedLang(lang.code)}
+                  onPress={() => handleSelectLang(lang.code)}
                   activeOpacity={0.85}
                   accessibilityRole="button"
                   accessibilityLabel={`Select ${lang.name}`}
+                  accessibilityState={{ selected: isSelected }}
                 >
                   <View style={styles.langLeft}>
                     <View
@@ -258,7 +293,12 @@ export const LanguageScreen: React.FC = () => {
           </View>
 
           {/* Italian side-by-side Toggle Card */}
-          <View
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleToggleItalian}
+            accessibilityRole="switch"
+            accessibilityLabel="Italian side by side toggle"
+            accessibilityState={{ checked: italianSideBySide }}
             style={[
               styles.toggleCard,
               {
@@ -293,12 +333,7 @@ export const LanguageScreen: React.FC = () => {
             </View>
 
             {/* Custom iOS-Grade Smooth Green Toggle */}
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => setItalianSideBySide(!italianSideBySide)}
-              accessibilityRole="switch"
-              accessibilityLabel="Italian side by side toggle"
-              accessibilityState={{ checked: italianSideBySide }}
+            <View
               style={[
                 styles.iosSwitchTrack,
                 {
@@ -312,8 +347,8 @@ export const LanguageScreen: React.FC = () => {
               ]}
             >
               <View style={styles.iosSwitchThumb} />
-            </TouchableOpacity>
-          </View>
+            </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
