@@ -176,14 +176,14 @@ export const WelcomeScreen: React.FC = () => {
             source={require('../../../assets/mockup-art/qr-icon.png')}
             style={[
               styles.qrIcon,
-              { tintColor: isDark ? '#475569' : '#8A96A6' },
+              { tintColor: isDark ? '#6B7690' : '#98A2B3' },
             ]}
             resizeMode="contain"
           />
           <Text
             style={[
               styles.footerText,
-              { color: isDark ? '#475569' : '#8A96A6' },
+              { color: isDark ? '#6B7690' : '#98A2B3' },
             ]}
           >
             Studying on another device? Scan to log in
