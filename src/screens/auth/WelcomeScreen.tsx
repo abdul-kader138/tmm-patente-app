@@ -104,10 +104,11 @@ export const WelcomeScreen: React.FC = () => {
               accessibilityLabel="Continue with Google"
               onPress={() => navigation.navigate('Language')}
             >
-              <Image
-                source={require('../../../assets/mockup-art/google-g.png')}
-                style={styles.googleGIcon}
-                resizeMode="contain"
+              <Ionicons
+                name="logo-google"
+                size={20}
+                color="#4285F4"
+                style={styles.googleIcon}
               />
               <Text
                 style={[
@@ -250,9 +251,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
-  googleGIcon: {
-    width: 20,
-    height: 20,
+  googleIcon: {
     marginRight: 10,
   },
   appleIcon: {
