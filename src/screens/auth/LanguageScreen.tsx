@@ -19,7 +19,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
 import { getHeaderTopInset } from '../../utils/safeArea';
-import { Ionicons } from '@expo/vector-icons';
+import { ArrowLeft, ArrowRight, Languages } from 'lucide-react-native';
 
 if (
   Platform.OS === 'android' &&
@@ -82,10 +82,6 @@ export const LanguageScreen: React.FC = () => {
   const horizontalMargin = 20;
   const contentWidth = Math.min(width - horizontalMargin * 2, 400);
 
-  const translateIcon = isDark
-    ? require('../../../assets/mockup-art/translate-icon-dark.png')
-    : require('../../../assets/mockup-art/translate-icon-light.png');
-
   const statusBarOffset = getHeaderTopInset(insets, 14);
 
   return (
@@ -118,10 +114,10 @@ export const LanguageScreen: React.FC = () => {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons
-            name="arrow-back"
+          <ArrowLeft
             size={20}
             color={isDark ? '#FFFFFF' : '#0B1220'}
+            strokeWidth={2}
           />
         </TouchableOpacity>
 
@@ -311,11 +307,14 @@ export const LanguageScreen: React.FC = () => {
               },
             ]}
           >
-            <Image
-              source={translateIcon}
-              style={styles.translateBadgeImage}
-              resizeMode="contain"
-            />
+            <View
+              style={[
+                styles.translateIconBox,
+                { backgroundColor: isDark ? '#261D3B' : '#F5F3FF' },
+              ]}
+            >
+              <Languages size={22} color={isDark ? '#A78BFA' : '#7C3AED'} strokeWidth={2} />
+            </View>
 
             <View style={styles.toggleTextContainer}>
               <Text
@@ -379,7 +378,7 @@ export const LanguageScreen: React.FC = () => {
           accessibilityLabel="Continue"
         >
           <Text style={styles.continueText}>Continue</Text>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={styles.continueIcon} />
+          <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.5} style={styles.continueIcon} />
         </TouchableOpacity>
       </View>
     </View>
@@ -505,10 +504,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 12,
   },
-  translateBadgeImage: {
+  translateIconBox: {
     width: 44,
     height: 44,
     borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   toggleTextContainer: {
     flex: 1,
