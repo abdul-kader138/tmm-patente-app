@@ -26,7 +26,7 @@ export interface ColorScheme {
 }
 
 export const lightColors: ColorScheme = {
-  background: '#F8FAFC',
+  background: '#F5F7FB',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   textPrimary: '#0F172A',
@@ -53,7 +53,7 @@ export const lightColors: ColorScheme = {
 };
 
 export const darkColors: ColorScheme = {
-  background: '#0B1120',
+  background: '#0A0E18',
   surface: '#1E293B',
   surfaceElevated: '#243247',
   textPrimary: '#F8FAFC',

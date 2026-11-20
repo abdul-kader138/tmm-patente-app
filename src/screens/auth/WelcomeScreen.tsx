@@ -1,5 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  useWindowDimensions,
+  Platform,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -10,194 +20,264 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'Welcome'>;
 
 export const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   const { colors, isDark } = useTheme();
 
+  // Responsive calculations based on screen dimensions
+  const horizontalPadding = 20;
+  const cardWidth = Math.min(width - horizontalPadding * 2, 420);
+  const cardHeight = Math.min(cardWidth * (696 / 700), height * 0.44);
+
+  const heroImage = isDark
+    ? require('../../../assets/mockup-art/welcome-hero-dark.png')
+    : require('../../../assets/mockup-art/welcome-hero-light.png');
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      
-      {/* Top Language Pill & Skip */}
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          style={[styles.langPill, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={() => navigation.navigate('Language')}
-        >
-          <Ionicons name="globe-outline" size={16} color={colors.primary} />
-          <Text style={[styles.langText, { color: colors.textPrimary }]}>বাংলা / English</Text>
-          <Ionicons name="chevron-down" size={14} color={colors.textMuted} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={() => navigation.replace('MainTabs')}>
-          <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Hero Badge & Illustration */}
-      <View style={styles.heroSection}>
-        <View style={[styles.badgeContainer, { backgroundColor: colors.primaryLight }]}>
-          <Ionicons name="car-sport" size={60} color={colors.primary} />
-        </View>
-
-        <Text style={[styles.title, { color: colors.textPrimary }]}>
-          TMM Bangla Patente
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          Pass the Italian driving theory exam in your native language with confidence.
-        </Text>
-      </View>
-
-      {/* Feature Bullet Points */}
-      <View style={styles.featureList}>
-        <View style={styles.featureItem}>
-          <View style={[styles.iconBox, { backgroundColor: colors.successLight }]}>
-            <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingTop: Math.max(insets.top, 16),
+            paddingBottom: Math.max(insets.bottom, 16) + 12,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {/* Top Hero Section */}
+        <View style={styles.topContainer}>
+          {/* Road Sign Graphic Card */}
+          <View
+            style={[
+              styles.heroCardContainer,
+              {
+                width: cardWidth,
+                height: cardHeight,
+                shadowColor: isDark ? '#000' : '#2563EB',
+                shadowOpacity: isDark ? 0.3 : 0.12,
+              },
+            ]}
+          >
+            <Image
+              source={heroImage}
+              style={styles.heroImage}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={[styles.featureText, { color: colors.textPrimary }]}>
-            7,000+ ministerial quizzes translated
-          </Text>
-        </View>
 
-        <View style={styles.featureItem}>
-          <View style={[styles.iconBox, { backgroundColor: colors.primaryLight }]}>
-            <Ionicons name="play-circle" size={20} color={colors.primary} />
+          {/* Typography Header */}
+          <View style={[styles.textBlock, { width: cardWidth }]}>
+            <Text
+              style={[
+                styles.title,
+                { color: isDark ? '#FFFFFF' : '#0B1220' },
+              ]}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+            >
+              Your Italian driving licence,{'\n'}in your language
+            </Text>
+
+            <Text
+              style={[
+                styles.subtitle,
+                { color: isDark ? '#94A3B8' : '#475569' },
+              ]}
+            >
+              Official ministerial quizzes, video lessons and audio explanations
+              in Bangla and English.
+            </Text>
           </View>
-          <Text style={[styles.featureText, { color: colors.textPrimary }]}>
-            124 video lessons in Bangla with notes
-          </Text>
         </View>
 
-        <View style={styles.featureItem}>
-          <View style={[styles.iconBox, { backgroundColor: colors.warningLight }]}>
-            <Ionicons name="mic" size={20} color={colors.warning} />
-          </View>
-          <Text style={[styles.featureText, { color: colors.textPrimary }]}>
-            Native audio explanation for every quiz
-          </Text>
+        {/* Action Buttons Section */}
+        <View style={[styles.actionContainer, { width: cardWidth }]}>
+          {/* Continue with Google */}
+          <TouchableOpacity
+            style={[
+              styles.authButton,
+              {
+                backgroundColor: isDark ? '#161B26' : '#FFFFFF',
+                borderColor: isDark ? '#262F40' : '#E2E8F0',
+                borderWidth: 1,
+              },
+            ]}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('Language')}
+          >
+            <Ionicons name="logo-google" size={20} color="#4285F4" style={styles.authIcon} />
+            <Text
+              style={[
+                styles.authButtonText,
+                { color: isDark ? '#FFFFFF' : '#0B1220' },
+              ]}
+            >
+              Continue with Google
+            </Text>
+          </TouchableOpacity>
+
+          {/* Continue with Apple */}
+          <TouchableOpacity
+            style={[
+              styles.authButton,
+              {
+                backgroundColor: isDark ? '#FFFFFF' : '#0B1220',
+                borderColor: isDark ? '#FFFFFF' : '#0B1220',
+                borderWidth: 1,
+              },
+            ]}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('Language')}
+          >
+            <Ionicons
+              name="logo-apple"
+              size={22}
+              color={isDark ? '#0B1220' : '#FFFFFF'}
+              style={styles.authIcon}
+            />
+            <Text
+              style={[
+                styles.authButtonText,
+                { color: isDark ? '#0B1220' : '#FFFFFF' },
+              ]}
+            >
+              Continue with Apple
+            </Text>
+          </TouchableOpacity>
+
+          {/* Use phone number */}
+          <TouchableOpacity
+            style={styles.phoneButton}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Language')}
+          >
+            <Text style={styles.phoneButtonText}>Use phone number</Text>
+          </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Bottom CTA Buttons */}
-      <View style={styles.bottomSection}>
+        {/* Footer / QR code login */}
         <TouchableOpacity
-          style={[styles.primaryButton, { backgroundColor: colors.primary }]}
-          onPress={() => navigation.navigate('Language')}
-        >
-          <Text style={styles.primaryButtonText}>Get started</Text>
-          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.secondaryButton, { borderColor: colors.border }]}
+          style={styles.footerContainer}
+          activeOpacity={0.75}
           onPress={() => navigation.replace('MainTabs')}
         >
-          <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>
-            I already have an account
+          <Ionicons
+            name="qr-code-outline"
+            size={16}
+            color={isDark ? '#64748B' : '#94A3B8'}
+          />
+          <Text
+            style={[
+              styles.footerText,
+              { color: isDark ? '#64748B' : '#94A3B8' },
+            ]}
+          >
+            Studying on another device? Scan to log in
           </Text>
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    paddingHorizontal: 24,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
   },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  topContainer: {
     alignItems: 'center',
-    paddingVertical: 12,
+    width: '100%',
   },
-  langPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 6,
+  heroCardContainer: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    marginBottom: 20,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
+    elevation: 4,
   },
-  langText: {
-    fontSize: 13,
-    fontWeight: '600',
+  heroImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
   },
-  skipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  heroSection: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  badgeContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
+  textBlock: {
+    alignSelf: 'center',
     marginBottom: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 27,
     fontWeight: '800',
-    textAlign: 'center',
+    letterSpacing: -0.6,
+    lineHeight: 34,
     marginBottom: 10,
+    textAlign: 'left',
   },
   subtitle: {
     fontSize: 15,
-    textAlign: 'center',
+    fontWeight: '400',
     lineHeight: 22,
-    paddingHorizontal: 12,
+    letterSpacing: -0.2,
+    textAlign: 'left',
   },
-  featureList: {
-    marginVertical: 20,
-    gap: 16,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  actionContainer: {
+    width: '100%',
     gap: 12,
+    alignSelf: 'center',
+    marginBottom: 16,
   },
-  iconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  featureText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  bottomSection: {
-    paddingBottom: 24,
-    gap: 12,
-  },
-  primaryButton: {
-    flexDirection: 'row',
+  authButton: {
     height: 52,
     borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  authIcon: {
+    marginRight: 10,
+  },
+  authButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+  },
+  phoneButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+  },
+  phoneButtonText: {
+    color: '#3B82F6',
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+  },
+  footerContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    paddingVertical: 8,
+    alignSelf: 'center',
   },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  secondaryButton: {
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+  footerText: {
+    fontSize: 13,
+    fontWeight: '500',
+    letterSpacing: -0.1,
   },
 });
