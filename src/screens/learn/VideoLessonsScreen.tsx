@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Polygon, Line, Circle } from 'react-native-svg';
+import Svg, { Path, Polygon, Rect, Circle } from 'react-native-svg';
 import { Search, Check, Download, Lock } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../navigation/types';
@@ -22,53 +22,69 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // --- PURE VECTOR SVG ROAD SIGNS ---
 
-/** Railway Level Crossing Danger Sign */
-const LevelCrossingSign: React.FC<{ size?: number }> = ({ size = 64 }) => (
-  <Svg width={size} height={size} viewBox="0 0 64 64">
-    {/* Outer Red Danger Triangle */}
+/** Railway Level Crossing Danger Sign (passaggio a livello con barriere) */
+const LevelCrossingSign: React.FC<{ width?: number; height?: number }> = ({
+  width = 100,
+  height = 87.5,
+}) => (
+  <Svg width={width} height={height} viewBox="0 0 200 175">
+    {/* Outer Red Danger Triangle with rounded corners */}
     <Polygon
-      points="32,6 60,56 4,56"
-      fill="#FFFFFF"
-      stroke="#E11D48"
-      strokeWidth="7"
+      points="100,4 196,172 4,172"
+      fill="#D82D20"
+      stroke="#D82D20"
+      strokeWidth="6"
       strokeLinejoin="round"
+      strokeLinecap="round"
     />
-    {/* Railway Barrier / Fence Graphic */}
-    <Line x1="22" y1="38" x2="42" y2="38" stroke="#0F172A" strokeWidth="2.5" />
-    <Line x1="22" y1="46" x2="42" y2="46" stroke="#0F172A" strokeWidth="2.5" />
-    <Line x1="25" y1="33" x2="25" y2="51" stroke="#0F172A" strokeWidth="2.5" />
-    <Line x1="30" y1="33" x2="30" y2="51" stroke="#0F172A" strokeWidth="2.5" />
-    <Line x1="34" y1="33" x2="34" y2="51" stroke="#0F172A" strokeWidth="2.5" />
-    <Line x1="39" y1="33" x2="39" y2="51" stroke="#0F172A" strokeWidth="2.5" />
+    {/* Inner White Triangle */}
+    <Polygon points="100,43 163,152 37,152" fill="#FFFFFF" />
+    {/* Top horizontal fence rail */}
+    <Rect x={58} y={105} width={84} height={9} fill="#111827" />
+    {/* Bottom horizontal fence rail */}
+    <Rect x={58} y={128} width={84} height={9} fill="#111827" />
+    {/* 5 vertical fence pickets */}
+    <Rect x={62} y={94} width={7} height={49} fill="#111827" />
+    <Rect x={81} y={94} width={7} height={49} fill="#111827" />
+    <Rect x={100} y={94} width={7} height={49} fill="#111827" />
+    <Rect x={120} y={94} width={7} height={49} fill="#111827" />
+    <Rect x={135} y={94} width={7} height={49} fill="#111827" />
   </Svg>
 );
 
 /** General Danger Exclamation Sign (!) */
-const DangerSign: React.FC<{ size?: number }> = ({ size = 32 }) => (
-  <Svg width={size} height={size} viewBox="0 0 32 32">
-    <Polygon
-      points="16,4 30,28 2,28"
-      fill="#FFFFFF"
-      stroke="#E11D48"
-      strokeWidth="3.5"
+const DangerSign: React.FC<{ width?: number; height?: number }> = ({
+  width = 45,
+  height = 42,
+}) => (
+  <Svg width={width} height={height} viewBox="0 0 45 42">
+    <Path
+      d="M 22.5 3 L 42.5 39 A 2 2 0 0 1 40.5 41 L 4.5 41 A 2 2 0 0 1 2.5 39 Z"
+      fill="#D82D20"
+      stroke="#D82D20"
+      strokeWidth={1.5}
       strokeLinejoin="round"
     />
-    {/* Exclamation Mark */}
-    <Line x1="16" y1="14" x2="16" y2="21" stroke="#0F172A" strokeWidth="2" strokeLinecap="round" />
-    <Circle cx="16" cy="24.5" r="1.2" fill="#0F172A" />
+    <Polygon points="22.5,11 37.5,37 7.5,37" fill="#FFFFFF" />
+    <Rect x={21.2} y={18} width={2.6} height={10} rx={1.3} fill="#111827" />
+    <Circle cx={22.5} cy={32} r={1.5} fill="#111827" />
   </Svg>
 );
 
 /** Inverted Yield / Give Way Sign */
-const YieldSign: React.FC<{ size?: number }> = ({ size = 32 }) => (
-  <Svg width={size} height={size} viewBox="0 0 32 32">
-    <Polygon
-      points="2,5 30,5 16,29"
-      fill="#FFFFFF"
-      stroke="#E11D48"
-      strokeWidth="3.5"
+const YieldSign: React.FC<{ width?: number; height?: number }> = ({
+  width = 45,
+  height = 42,
+}) => (
+  <Svg width={width} height={height} viewBox="0 0 45 42">
+    <Path
+      d="M 4.5 3 L 40.5 3 A 2 2 0 0 1 42.5 5 L 24.5 39 A 2 2 0 0 1 20.5 39 L 2.5 5 A 2 2 0 0 1 4.5 3 Z"
+      fill="#D82D20"
+      stroke="#D82D20"
+      strokeWidth={1.5}
       strokeLinejoin="round"
     />
+    <Polygon points="22.5,32 37.5,7 7.5,7" fill="#FFFFFF" />
   </Svg>
 );
 
@@ -228,7 +244,7 @@ export const VideoLessonsScreen: React.FC = () => {
           >
             {/* Thumbnail Banner */}
             <LinearGradient
-              colors={['#1D3ED6', '#3B82F6']}
+              colors={['#1F3D95', '#2953E3']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.featuredThumbnail}
@@ -238,14 +254,14 @@ export const VideoLessonsScreen: React.FC = () => {
 
               {/* White Play Button Overlay */}
               <View style={styles.heroPlayButton}>
-                <Svg width={18} height={18} viewBox="0 0 24 24" style={{ marginLeft: 2 }}>
-                  <Polygon points="7,4 20,12 7,20" fill="#0F172A" />
+                <Svg width={10} height={12} viewBox="0 0 10 12" style={{ marginLeft: 2 }}>
+                  <Polygon points="1,1 9,6 1,11" fill="#111827" />
                 </Svg>
               </View>
 
               {/* Road Sign Graphic on Right */}
               <View style={styles.heroSignContainer}>
-                <LevelCrossingSign size={86} />
+                <LevelCrossingSign width={100} height={87.5} />
               </View>
 
               {/* Duration Badge */}
@@ -255,7 +271,7 @@ export const VideoLessonsScreen: React.FC = () => {
 
               {/* Progress Bar along bottom edge */}
               <View style={styles.progressBarTrack}>
-                <View style={[styles.progressBarFill, { width: '42%' }]} />
+                <View style={[styles.progressBarFill, { width: '34%' }]} />
               </View>
             </LinearGradient>
 
@@ -337,17 +353,17 @@ export const VideoLessonsScreen: React.FC = () => {
 
                   {/* Play circle */}
                   <View style={styles.itemPlayCircle}>
-                    <Svg width={11} height={11} viewBox="0 0 24 24" style={{ marginLeft: 1.5 }}>
-                      <Polygon points="7,4 20,12 7,20" fill="#0F172A" />
+                    <Svg width={8} height={10} viewBox="0 0 8 10" style={{ marginLeft: 1.5 }}>
+                      <Polygon points="1,1 7,5 1,9" fill="#111827" />
                     </Svg>
                   </View>
 
                   {/* Sign icon */}
                   <View style={styles.itemSignContainer}>
                     {item.signType === 'yield' ? (
-                      <YieldSign size={24} />
+                      <YieldSign width={45} height={42} />
                     ) : (
-                      <DangerSign size={24} />
+                      <DangerSign width={45} height={42} />
                     )}
                   </View>
                 </LinearGradient>
@@ -502,27 +518,28 @@ const styles = StyleSheet.create({
   },
   featuredThumbnail: {
     width: '100%',
-    height: 175,
-    borderRadius: 20,
+    height: 168,
+    borderRadius: 24,
     overflow: 'hidden',
     position: 'relative',
-    justifyContent: 'center',
   },
   decorativeCurve: {
     position: 'absolute',
-    left: -40,
-    bottom: -60,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
+    left: -50,
+    bottom: -80,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
     backgroundColor: 'rgba(0, 0, 0, 0.12)',
   },
   heroPlayButton: {
     position: 'absolute',
-    left: 32,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    left: 72,
+    top: '50%',
+    marginTop: -22,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -534,18 +551,23 @@ const styles = StyleSheet.create({
   },
   heroSignContainer: {
     position: 'absolute',
-    right: 32,
+    right: 87.5,
+    top: 40,
+    width: 100,
+    height: 87.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   durationBadge: {
     position: 'absolute',
-    bottom: 12,
-    right: 12,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    paddingHorizontal: 8,
-    paddingVertical: 3.5,
-    borderRadius: 6,
+    bottom: 8,
+    right: 8,
+    width: 46,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#101E3C',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   durationText: {
     color: '#FFFFFF',
@@ -558,12 +580,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    height: 4,
+    backgroundColor: '#6A87EA',
   },
   progressBarFill: {
-    height: 3,
-    backgroundColor: '#EF4444',
+    height: 4,
+    backgroundColor: '#FF4D4F',
   },
   featuredMeta: {
     marginTop: 12,
@@ -609,24 +631,26 @@ const styles = StyleSheet.create({
   },
   itemThumbnail: {
     width: 108,
-    height: 60,
-    borderRadius: 14,
+    height: 66,
+    borderRadius: 16,
     overflow: 'hidden',
     position: 'relative',
     justifyContent: 'center',
   },
   itemThumbnailCurve: {
     position: 'absolute',
-    left: -15,
+    left: -20,
     bottom: -20,
-    width: 85,
-    height: 85,
-    borderRadius: 42.5,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     backgroundColor: 'rgba(0, 0, 0, 0.15)',
   },
   itemPlayCircle: {
     position: 'absolute',
-    left: 14,
+    left: 18.5,
+    top: '50%',
+    marginTop: -14,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -637,6 +661,10 @@ const styles = StyleSheet.create({
   itemSignContainer: {
     position: 'absolute',
     right: 12,
+    top: '50%',
+    marginTop: -21,
+    width: 45,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
   },
