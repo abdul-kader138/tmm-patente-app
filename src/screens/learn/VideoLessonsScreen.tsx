@@ -249,8 +249,17 @@ export const VideoLessonsScreen: React.FC = () => {
               end={{ x: 1, y: 1 }}
               style={styles.featuredThumbnail}
             >
-              {/* Background decorative curve */}
-              <View style={styles.decorativeCurve} />
+              {/* Illustrated Vector Backdrop Texture */}
+              <Svg
+                style={StyleSheet.absoluteFill}
+                viewBox="0 0 350 168"
+                preserveAspectRatio="none"
+              >
+                <Path
+                  d="M 0 55 C 25 48, 55 48, 85 58 C 115 68, 128 85, 132 115 C 134 135, 134.5 152, 135 168 L 0 168 Z"
+                  fill="rgba(255, 255, 255, 0.15)"
+                />
+              </Svg>
 
               {/* White Play Button Overlay */}
               <View style={styles.heroPlayButton}>
@@ -523,15 +532,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  decorativeCurve: {
-    position: 'absolute',
-    left: -50,
-    bottom: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: 'rgba(0, 0, 0, 0.12)',
-  },
   heroPlayButton: {
     position: 'absolute',
     left: 72,
@@ -544,10 +544,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
   },
   heroSignContainer: {
     position: 'absolute',
