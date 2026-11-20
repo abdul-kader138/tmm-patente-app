@@ -31,6 +31,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     AsyncStorage.getItem(THEME_STORAGE_KEY).then((saved) => {
       if (saved === 'dark') {
         setModeState('dark');
+      } else if (saved === 'light') {
+        setModeState('light');
       } else {
         setModeState('system');
       }

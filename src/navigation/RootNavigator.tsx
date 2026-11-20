@@ -31,7 +31,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const RootNavigator: React.FC = () => {
   return (
     <Stack.Navigator
-      initialRouteName="Welcome"
+      initialRouteName="QuizQuestion"
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
