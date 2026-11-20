@@ -26,14 +26,20 @@ import {
   TriangleAlert,
   Trophy,
   Headphones,
-  Play,
 } from 'lucide-react-native';
 import { CircularGauge } from '../../components/common/CircularGauge';
 
 const LessonsVideoIcon: React.FC<{ color: string; size?: number }> = ({ color, size = 20 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Rect x="2" y="4" width="20" height="16" rx="4" stroke={color} strokeWidth="2" />
-    <Polygon points="10,8.5 16,12 10,15.5" fill={color} />
+    <Rect x="2" y="3.5" width="20" height="17" rx="2.5" stroke={color} strokeWidth="2" />
+    <Polygon
+      points="10,8 16.5,12 10,16"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      fill="none"
+    />
   </Svg>
 );
 
@@ -474,7 +480,9 @@ export const HomeScreen: React.FC = () => {
                 { backgroundColor: isDark ? '#5B7CFF' : '#2D5BFF' },
               ]}
             >
-              <Play size={18} color="#FFFFFF" fill="#FFFFFF" style={{ marginLeft: 2 }} />
+              <Svg width={16} height={16} viewBox="0 0 24 24" style={{ marginLeft: 2 }}>
+                <Polygon points="7.5,5.5 18.5,12 7.5,18.5" fill="#FFFFFF" />
+              </Svg>
             </View>
             <View style={styles.continueInfo}>
               <Text
@@ -830,9 +838,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   continuePlayBox: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },

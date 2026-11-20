@@ -9,8 +9,15 @@ import { Home, CheckSquare, BookOpen, User } from 'lucide-react-native';
 
 const TabVideoIcon: React.FC<{ color: string; size?: number }> = ({ color, size = 22 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Rect x="2" y="4" width="20" height="16" rx="4" stroke={color} strokeWidth="2" />
-    <Polygon points="10,8.5 16,12 10,15.5" fill={color} />
+    <Rect x="2" y="3.5" width="20" height="17" rx="2.5" stroke={color} strokeWidth="2" />
+    <Polygon
+      points="10,8 16.5,12 10,16"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      fill="none"
+    />
   </Svg>
 );
 
