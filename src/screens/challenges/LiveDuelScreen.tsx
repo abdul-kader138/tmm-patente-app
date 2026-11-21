@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
-} from 'react-native';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { StatusBar } from 'expo-status-bar';
+import Svg, { Circle, G } from 'react-native-svg';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,192 +12,309 @@ import { mockDuelData } from '../../api/mockData';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-export const LiveDuelScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
-  const { colors } = useTheme();
+/* -------------------------------------------------------------------------- */
+/* Types & session constants                                                  */
+/* -------------------------------------------------------------------------- */
 
-  const [userScore, setUserScore] = useState(mockDuelData.activeDuel.userScore);
-  const [opponentScore, setOpponentScore] = useState(mockDuelData.activeDuel.opponentScore);
-  const [timer, setTimer] = useState(6);
-  const [selectedAns, setSelectedAns] = useState<'V' | 'F' | null>(null);
+type Choice = 'V' | 'F';
+type RoundResult = 'correct' | 'wrong' | null;
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimer((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+const TOTAL_QUESTIONS = 10;
+const CURRENT_INDEX = 8; // Q9 of 10 in the design snapshot
+const ROUND_SECONDS = 10;
+const INITIAL_SECONDS = 6; // design snapshot: 6 s left
+const RESULT_DELAY_MS = 1500;
+const USER_INITIALS = 'RU'; // TODO: take from the signed-in profile
 
-  const handleAnswer = (choice: 'V' | 'F') => {
-    setSelectedAns(choice);
-    if (choice === 'F') {
-      setUserScore((prev) => prev + 1);
-    }
-    setTimeout(() => {
-      navigation.navigate('ExamResult', { score: userScore + 1, passed: true });
-    }, 1500);
-  };
+/**
+ * TODO: take the correct answer from the question payload.
+ * The previous implementation treated "F" as correct, so that is kept here.
+ */
+const CORRECT_ANSWER: Choice = 'F';
+const OPPONENT_ANSWERED = true; // TODO: drive from the live duel socket
+
+// Rounds 1-8 are already played in the snapshot (round 3 was wrong).
+const INITIAL_RESULTS: RoundResult[] = Array.from({ length: TOTAL_QUESTIONS }, (_, i) =>
+  i < CURRENT_INDEX ? (i === 2 ? 'wrong' : 'correct') : null,
+);
+
+const NO_ENTRY_RED = '#D92D20';
+
+/* -------------------------------------------------------------------------- */
+/* Sub-components                                                             */
+/* -------------------------------------------------------------------------- */
+
+interface TimerRingProps {
+  secondsLeft: number;
+  total: number;
+  color: string;
+  trackColor: string;
+  textColor: string;
+}
+
+/** 52pt ring, 4pt stroke, round cap; the arc is the remaining time, clockwise from 12 o'clock. */
+const TimerRing = memo(({ secondsLeft, total, color, trackColor, textColor }: TimerRingProps) => {
+  const size = 52;
+  const stroke = 4;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const progress = Math.min(1, Math.max(0, secondsLeft / total));
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Top 1-vs-1 Score Bar */}
+    <View
+      style={styles.timerRing}
+      accessible
+      accessibilityRole="timer"
+      accessibilityLabel={`${secondsLeft} seconds left`}
+    >
+      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
+        <G rotation={-90} origin={`${size / 2}, ${size / 2}`}>
+          <Circle cx={size / 2} cy={size / 2} r={r} stroke={trackColor} strokeWidth={stroke} fill="none" />
+          {progress > 0 && (
+            <Circle
+              cx={size / 2}
+              cy={size / 2}
+              r={r}
+              stroke={color}
+              strokeWidth={stroke}
+              fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${c * progress} ${c}`}
+            />
+          )}
+        </G>
+      </Svg>
+      <Text style={[styles.timerDigit, { color: textColor }]}>{secondsLeft}</Text>
+    </View>
+  );
+});
+
+type ChoiceState = 'idle' | 'correct' | 'wrong';
+
+interface ChoiceButtonProps {
+  letter: Choice;
+  label: string;
+  state: ChoiceState;
+  disabled: boolean;
+  onPress: (c: Choice) => void;
+}
+
+const ChoiceButton = memo(({ letter, label, state, disabled, onPress }: ChoiceButtonProps) => {
+  const { colors } = useTheme();
+  const tone =
+    state === 'correct'
+      ? { bg: colors.successLight, border: colors.success }
+      : state === 'wrong'
+        ? { bg: colors.errorLight, border: colors.error }
+        : { bg: colors.card, border: colors.border };
+
+  return (
+    <TouchableOpacity
+      style={[styles.choiceBtn, { backgroundColor: tone.bg, borderColor: tone.border }]}
+      onPress={() => onPress(letter)}
+      disabled={disabled}
+      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}`}
+      accessibilityState={{ disabled }}
+    >
+      <Text style={[styles.choiceLetter, { color: colors.textPrimary }]}>{letter}</Text>
+      <Text style={[styles.choiceLabel, { color: colors.textMuted }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+});
+
+/* -------------------------------------------------------------------------- */
+/* Screen                                                                     */
+/* -------------------------------------------------------------------------- */
+
+export const LiveDuelScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const { colors, isDark } = useTheme();
+
+  const duel = mockDuelData.activeDuel;
+
+  const [userScore, setUserScore] = useState<number>(duel.userScore);
+  const [opponentScore] = useState<number>(duel.opponentScore);
+  const [secondsLeft, setSecondsLeft] = useState(INITIAL_SECONDS);
+  const [selectedAns, setSelectedAns] = useState<Choice | null>(null);
+  const [resolved, setResolved] = useState(false);
+  const [results, setResults] = useState<RoundResult[]>(INITIAL_RESULTS);
+
+  const resolvedRef = useRef(false);
+  const navTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Locks the round, scores it and moves on to the result screen. `null` = time ran out. */
+  const resolveRound = useCallback(
+    (choice: Choice | null) => {
+      if (resolvedRef.current) return;
+      resolvedRef.current = true;
+
+      const correct = choice !== null && choice === CORRECT_ANSWER;
+      const finalScore = userScore + (correct ? 1 : 0);
+
+      setSelectedAns(choice);
+      setResolved(true);
+      setUserScore(finalScore);
+      setResults((prev) => {
+        const next = [...prev];
+        next[CURRENT_INDEX] = correct ? 'correct' : 'wrong';
+        return next;
+      });
+
+      navTimeoutRef.current = setTimeout(() => {
+        navigation.navigate('ExamResult', { score: finalScore, passed: finalScore > opponentScore });
+      }, RESULT_DELAY_MS);
+    },
+    [userScore, opponentScore, navigation],
+  );
+
+  // Countdown: one tick per second, paused once the round is resolved.
+  useEffect(() => {
+    if (resolved) return;
+    if (secondsLeft <= 0) {
+      resolveRound(null);
+      return;
+    }
+    const id = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [secondsLeft, resolved, resolveRound]);
+
+  useEffect(
+    () => () => {
+      if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current);
+    },
+    [],
+  );
+
+  const choiceState = useCallback(
+    (c: Choice): ChoiceState => {
+      if (!resolved) return 'idle';
+      if (c === CORRECT_ANSWER) return 'correct';
+      if (c === selectedAns) return 'wrong';
+      return 'idle';
+    },
+    [resolved, selectedAns],
+  );
+
+  const segmentColors = useMemo(
+    () =>
+      results.map((r, i) => {
+        if (i === CURRENT_INDEX && !resolved) return colors.primary;
+        if (r === 'correct') return colors.success;
+        if (r === 'wrong') return colors.error;
+        return colors.indicatorInactive;
+      }),
+    [results, resolved, colors],
+  );
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
+      {/* 1-vs-1 score header */}
       <View style={styles.topScoreHeader}>
-        {/* User Score (Left) */}
         <View style={styles.scoreSideLeft}>
           <View style={[styles.playerAvatar, { backgroundColor: colors.primaryLight }]}>
-            <Text style={[styles.avatarText, { color: colors.primary }]}>RU</Text>
+            <Text style={[styles.avatarText, { color: colors.primary }]}>{USER_INITIALS}</Text>
           </View>
           <View>
-            <Text style={[styles.playerNameText, { color: colors.textMuted }]}>You</Text>
+            <Text style={[styles.playerNameText, { color: colors.textPrimary }]}>You</Text>
             <Text style={[styles.scoreValue, { color: colors.primary }]}>{userScore}</Text>
           </View>
         </View>
 
-        {/* Center Countdown Ring */}
         <View style={styles.centerTimerBox}>
-          <Text style={[styles.qIndexText, { color: colors.textMuted }]}>Q 9 / 10</Text>
-          <View style={[styles.timerCircle, { borderColor: colors.warning }]}>
-            <Text style={[styles.timerDigit, { color: colors.textPrimary }]}>{timer}</Text>
-          </View>
+          <Text style={[styles.qIndexText, { color: colors.textMuted }]}>
+            Q {CURRENT_INDEX + 1} / {TOTAL_QUESTIONS}
+          </Text>
+          <TimerRing
+            secondsLeft={secondsLeft}
+            total={ROUND_SECONDS}
+            color={colors.warning}
+            trackColor={colors.chipBackground}
+            textColor={colors.textPrimary}
+          />
         </View>
 
-        {/* Opponent Score (Right) */}
         <View style={styles.scoreSideRight}>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={[styles.playerNameText, { color: colors.textMuted }]}>
-              {mockDuelData.activeDuel.opponentName}
-            </Text>
+          <View style={styles.opponentTextCol}>
+            <Text style={[styles.playerNameText, { color: colors.textPrimary }]}>{duel.opponentName}</Text>
             <Text style={[styles.scoreValue, { color: colors.error }]}>{opponentScore}</Text>
           </View>
           <View style={[styles.playerAvatar, { backgroundColor: colors.errorLight }]}>
-            <Text style={[styles.avatarText, { color: colors.error }]}>
-              {mockDuelData.activeDuel.opponentInitials}
-            </Text>
+            <Text style={[styles.avatarText, { color: colors.error }]}>{duel.opponentInitials}</Text>
           </View>
         </View>
       </View>
 
-      {/* 10-Question Progress Segmented Bar */}
-      <View style={styles.progressBarRow}>
-        {[
-          'green',
-          'green',
-          'red',
-          'green',
-          'green',
-          'green',
-          'green',
-          'green',
-          'blue',
-          'grey',
-        ].map((status, index) => {
-          let bg = colors.indicatorInactive;
-          if (status === 'green') bg = colors.success;
-          if (status === 'red') bg = colors.error;
-          if (status === 'blue') bg = colors.primary;
-
-          return <View key={index} style={[styles.barSegment, { backgroundColor: bg }]} />;
-        })}
+      {/* Round progress */}
+      <View
+        style={styles.progressBarRow}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel={`Question ${CURRENT_INDEX + 1} of ${TOTAL_QUESTIONS}`}
+      >
+        {segmentColors.map((bg, i) => (
+          <View key={i} style={[styles.barSegment, { backgroundColor: bg }]} />
+        ))}
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Road Sign Graphic Card (No entry) */}
+        {/* Road sign (No entry) */}
         <View style={[styles.signCard, { backgroundColor: colors.cardHighlight }]}>
           <View style={styles.noEntrySign}>
             <View style={styles.whiteDash} />
           </View>
         </View>
 
-        {/* Question Text */}
-        <Text style={[styles.questionText, { color: colors.textPrimary }]}>
-          {mockDuelData.activeDuel.question.textItalian}
-        </Text>
+        <Text style={[styles.questionText, { color: colors.textPrimary }]}>{duel.question.textItalian}</Text>
 
-        {/* Translation Banner */}
         <View style={[styles.transCard, { backgroundColor: colors.primaryLight }]}>
-          <Ionicons name="language" size={16} color={colors.primary} />
-          <Text style={[styles.transText, { color: colors.textPrimary }]}>
-            {mockDuelData.activeDuel.question.translation}
-          </Text>
+          <Ionicons name="language" size={15} color={colors.primary} style={styles.transIcon} />
+          <Text style={[styles.transText, { color: colors.textPrimary }]}>{duel.question.translation}</Text>
         </View>
 
-        {/* Large V / F Choice Buttons */}
         <View style={styles.choiceRow}>
-          {/* V (Vero) */}
-          <TouchableOpacity
-            style={[
-              styles.choiceBtn,
-              {
-                backgroundColor:
-                  selectedAns === 'V' ? colors.errorLight : colors.card,
-                borderColor: selectedAns === 'V' ? colors.error : colors.border,
-                borderWidth: selectedAns === 'V' ? 2 : 1,
-              },
-            ]}
-            onPress={() => handleAnswer('V')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.choiceLetter, { color: colors.textPrimary }]}>V</Text>
-            <Text style={[styles.choiceLabel, { color: colors.textMuted }]}>VERO</Text>
-          </TouchableOpacity>
-
-          {/* F (Falso) */}
-          <TouchableOpacity
-            style={[
-              styles.choiceBtn,
-              {
-                backgroundColor:
-                  selectedAns === 'F' ? colors.successLight : colors.card,
-                borderColor: selectedAns === 'F' ? colors.success : colors.border,
-                borderWidth: selectedAns === 'F' ? 2 : 1,
-              },
-            ]}
-            onPress={() => handleAnswer('F')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.choiceLetter, { color: colors.textPrimary }]}>F</Text>
-            <Text style={[styles.choiceLabel, { color: colors.textMuted }]}>FALSO</Text>
-          </TouchableOpacity>
+          <ChoiceButton letter="V" label="VERO" state={choiceState('V')} disabled={resolved} onPress={resolveRound} />
+          <ChoiceButton letter="F" label="FALSO" state={choiceState('F')} disabled={resolved} onPress={resolveRound} />
         </View>
 
-        {/* Opponent Status Indicator */}
-        <View style={styles.opponentStatusRow}>
-          <View style={[styles.miniBadge, { backgroundColor: colors.errorLight }]}>
-            <Text style={[styles.miniBadgeText, { color: colors.error }]}>KH</Text>
+        {OPPONENT_ANSWERED && (
+          <View style={styles.opponentStatusRow}>
+            <View style={[styles.miniBadge, { backgroundColor: colors.errorLight }]}>
+              <Text style={[styles.miniBadgeText, { color: colors.error }]}>{duel.opponentInitials}</Text>
+            </View>
+            <Text style={[styles.opponentStatusText, { color: colors.textMuted }]}>
+              {duel.opponentName} has already answered
+            </Text>
           </View>
-          <Text style={[styles.opponentStatusText, { color: colors.textMuted }]}>
-            Karim has already answered
-          </Text>
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+export default LiveDuelScreen;
+
+/* -------------------------------------------------------------------------- */
+/* Styles (measured from the 780x1688 @2x design: px / 2 = pt)                */
+/* -------------------------------------------------------------------------- */
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+
+  // Header: natural-width sides + space-between puts the timer at x=188.5 like the design
   topScoreHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 7,
   },
-  scoreSideLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    width: '30%',
-  },
-  scoreSideRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 10,
-    width: '30%',
-  },
+  scoreSideLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  scoreSideRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  opponentTextCol: { alignItems: 'flex-end' },
   playerAvatar: {
     width: 44,
     height: 44,
@@ -209,113 +322,108 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  playerNameText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  scoreValue: {
-    fontSize: 22,
-    fontWeight: '900',
-  },
-  centerTimerBox: {
-    alignItems: 'center',
-    gap: 4,
-  },
+  avatarText: { fontSize: 16, fontWeight: '800', includeFontPadding: false },
+  playerNameText: { fontSize: 13, lineHeight: 16, fontWeight: '700', includeFontPadding: false },
+  scoreValue: { fontSize: 24, lineHeight: 28, fontWeight: '900', includeFontPadding: false },
+
+  centerTimerBox: { alignItems: 'center', gap: 3.5 },
   qIndexText: {
-    fontSize: 11,
+    fontSize: 12,
+    lineHeight: 14,
     fontWeight: '700',
+    letterSpacing: 0.4,
+    includeFontPadding: false,
   },
-  timerCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  timerRing: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
   timerDigit: {
-    fontSize: 18,
-    fontWeight: '900',
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+    includeFontPadding: false,
   },
+
+  // 10 dashes: 28pt wide, 6pt gap, 6pt high, 28pt side padding
   progressBarRow: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: 28,
     gap: 6,
-    marginVertical: 10,
+    marginTop: 13,
   },
-  barSegment: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
-  },
+  barSegment: { flex: 1, height: 6, borderRadius: 3 },
+
   content: {
     paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 40,
+    paddingTop: 14,
+    paddingBottom: 32,
   },
   signCard: {
-    height: 200,
+    height: 150,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 14,
   },
   noEntrySign: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#EF4444',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: NO_ENTRY_RED,
     alignItems: 'center',
     justifyContent: 'center',
   },
   whiteDash: {
-    width: 60,
-    height: 14,
+    width: 64,
+    height: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 3,
   },
   questionText: {
-    fontSize: 18,
+    fontSize: 19,
+    lineHeight: 25,
     fontWeight: '800',
-    lineHeight: 26,
-    marginBottom: 16,
+    letterSpacing: -0.3,
+    marginBottom: 13,
+    includeFontPadding: false,
   },
   transCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
+    alignItems: 'flex-start',
+    paddingVertical: 10,
+    paddingHorizontal: 13,
     borderRadius: 14,
-    gap: 10,
-    marginBottom: 24,
+    gap: 8,
+    marginBottom: 14,
   },
+  transIcon: { width: 14, marginTop: 2 },
   transText: {
-    fontSize: 13,
-    lineHeight: 18,
     flex: 1,
+    fontSize: 13,
+    lineHeight: 17,
+    opacity: 0.78,
+    includeFontPadding: false,
   },
-  choiceRow: {
-    flexDirection: 'row',
-    gap: 14,
-    marginBottom: 20,
-  },
+  choiceRow: { flexDirection: 'row', gap: 13, marginBottom: 14 },
   choiceBtn: {
     flex: 1,
-    paddingVertical: 24,
-    borderRadius: 18,
+    height: 78,
+    borderRadius: 20,
+    borderWidth: 1.5,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   choiceLetter: {
     fontSize: 32,
+    lineHeight: 34,
     fontWeight: '900',
-    marginBottom: 2,
+    includeFontPadding: false,
   },
   choiceLabel: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 13,
+    lineHeight: 16,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    includeFontPadding: false,
   },
   opponentStatusRow: {
     flexDirection: 'row',
@@ -330,12 +438,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  miniBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  opponentStatusText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
+  miniBadgeText: { fontSize: 9, fontWeight: '800', includeFontPadding: false },
+  opponentStatusText: { fontSize: 14, lineHeight: 18, fontWeight: '500', includeFontPadding: false },
 });
