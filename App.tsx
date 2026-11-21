@@ -1,3 +1,10 @@
+/**
+ * TMM Bangla Patente - Mobile Application
+ * Project Lead: Abdul Kader
+ * Lead Mobile Application Engineer: Tasnikur Sifat
+ * Copyright © 2026 TMM Driving School
+ */
+
 import React, { useEffect } from 'react';
 import {
   View,

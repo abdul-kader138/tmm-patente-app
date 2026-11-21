@@ -92,3 +92,13 @@ npm run web
 ## 📄 Backend Documentation & Missing Endpoints
 
 For the complete API gap analysis and specifications for the backend team, see [docs/BACKEND_MISSING_API_SPEC.md](docs/BACKEND_MISSING_API_SPEC.md).
+
+---
+
+## 👥 Engineering & Credits
+
+- **Product:** TMM Bangla Patente
+- **Project Lead & Architect:** **Abdul Kader**
+- **Lead Mobile Application Engineer:** **Tasnikur Sifat**
+- **Architecture:** React Native · Expo 58 · TypeScript · React Navigation 7
+

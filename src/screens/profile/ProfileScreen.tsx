@@ -1,5 +1,14 @@
-import React, { memo, useCallback, useMemo } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { memo, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -156,6 +165,25 @@ export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { isDark, mode, toggleTheme } = useTheme();
   const c = getPalette(isDark);
+
+  const [devModalVisible, setDevModalVisible] = useState(false);
+  const tapCountRef = useRef(0);
+  const lastTapTimeRef = useRef(0);
+
+  const handleVersionTap = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapTimeRef.current < 1600) {
+      tapCountRef.current += 1;
+    } else {
+      tapCountRef.current = 1;
+    }
+    lastTapTimeRef.current = now;
+
+    if (tapCountRef.current >= 13) {
+      tapCountRef.current = 0;
+      setDevModalVisible(true);
+    }
+  }, []);
 
   const comingSoon = useCallback(
     (title: string) => Alert.alert(title, 'This feature is coming soon.'),
@@ -331,7 +359,144 @@ export const ProfileScreen: React.FC = () => {
             </View>
           </View>
         ))}
+
+        {/* Professional subtle footer with secret 5-tap developer credits */}
+        <TouchableOpacity
+          style={styles.versionFooter}
+          onPress={handleVersionTap}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="App version 1.0.0"
+        >
+          <Text style={[styles.versionText, { color: c.meta }]}>
+            TMM Bangla Patente · Version 1.0.0
+          </Text>
+          <Text style={[styles.copyrightText, { color: isDark ? '#4B5563' : '#94A3B8' }]}>
+            © 2026 TMM Driving School. All rights reserved.
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
+
+      {/* Secret Developer Easter Egg Modal (activated by 5 quick taps) */}
+      <Modal
+        visible={devModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDevModalVisible(false)}
+      >
+        <View style={styles.devBackdrop}>
+          <View
+            style={[
+              styles.devCard,
+              {
+                backgroundColor: isDark ? '#111827' : '#FFFFFF',
+                borderColor: isDark ? '#1F2937' : '#E2E8F0',
+              },
+            ]}
+          >
+            <View style={styles.devBadgeRow}>
+              <View style={styles.devIconBox}>
+                <Ionicons name="code-slash" size={20} color="#2D5BFF" />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text
+                  style={[
+                    styles.devHeaderTitle,
+                    { color: isDark ? '#FFFFFF' : '#0F172A' },
+                  ]}
+                >
+                  System & Engineering Info
+                </Text>
+                <Text style={[styles.devHeaderSub, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+                  Build v1.0.0 (Release)
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setDevModalVisible(false)}
+                style={[
+                  styles.devCloseBtn,
+                  { backgroundColor: isDark ? '#1F2937' : '#F1F5F9' },
+                ]}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={18} color={isDark ? '#E2E8F0' : '#475569'} />
+              </TouchableOpacity>
+            </View>
+
+            <View
+              style={[
+                styles.devBodyBox,
+                {
+                  backgroundColor: isDark ? '#1E293B' : '#F8FAFC',
+                  borderColor: isDark ? '#334155' : '#E2E8F0',
+                },
+              ]}
+            >
+              <View style={styles.devRow}>
+                <Text style={[styles.devLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+                  Project Lead:
+                </Text>
+                <Text style={[styles.devValue, { color: '#2563EB', fontWeight: '800' }]}>
+                  Abdul Kader
+                </Text>
+              </View>
+
+              <View style={styles.devRow}>
+                <Text style={[styles.devLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+                  Lead Developer:
+                </Text>
+                <Text style={[styles.devValue, { color: '#0284C7', fontWeight: '800' }]}>
+                  Tasnikur Sifat
+                </Text>
+              </View>
+
+              <View style={styles.devRow}>
+                <Text style={[styles.devLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+                  Role:
+                </Text>
+                <Text style={[styles.devValue, { color: isDark ? '#FFFFFF' : '#0F172A' }]}>
+                  Lead Mobile Application Engineer
+                </Text>
+              </View>
+
+              <View style={styles.devRow}>
+                <Text style={[styles.devLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+                  Framework:
+                </Text>
+                <Text style={[styles.devValue, { color: isDark ? '#FFFFFF' : '#0F172A' }]}>
+                  React Native · Expo · TypeScript
+                </Text>
+              </View>
+
+              <View style={styles.devRow}>
+                <Text style={[styles.devLabel, { color: isDark ? '#94A3B8' : '#64748B' }]}>
+                  Design Coverage:
+                </Text>
+                <Text style={[styles.devValue, { color: '#10B981', fontWeight: '700' }]}>
+                  Figma Screens Verified
+                </Text>
+              </View>
+            </View>
+
+            <Text
+              style={[
+                styles.devFooterNote,
+                { color: isDark ? '#64748B' : '#94A3B8' },
+              ]}
+            >
+              Engineered with precision & dedication for Bengali and South Asian learners in Italy.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.devDoneBtn}
+              onPress={() => setDevModalVisible(false)}
+              activeOpacity={0.88}
+            >
+              <Text style={styles.devDoneText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -443,4 +608,106 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   divider: { height: 1 },
+
+  // Footer & Easter egg styles
+  versionFooter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 28,
+    paddingBottom: 20,
+    gap: 4,
+  },
+  versionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  copyrightText: {
+    fontSize: 10.5,
+    fontWeight: '400',
+  },
+
+  // Developer Easter Egg Modal
+  devBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  devCard: {
+    width: '100%',
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 22,
+  },
+  devBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  devIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(45, 91, 255, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  devHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  devHeaderSub: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  devCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  devBodyBox: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    gap: 10,
+    marginBottom: 14,
+  },
+  devRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  devLabel: {
+    fontSize: 12.5,
+    fontWeight: '600',
+  },
+  devValue: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  devFooterNote: {
+    fontSize: 11.5,
+    lineHeight: 16,
+    textAlign: 'center',
+    marginBottom: 18,
+    paddingHorizontal: 10,
+  },
+  devDoneBtn: {
+    backgroundColor: '#2D5BFF',
+    paddingVertical: 13,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  devDoneText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
 });
