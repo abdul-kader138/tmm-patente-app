@@ -24,12 +24,15 @@ const TabVideoIcon: React.FC<{ color: string; size?: number }> = ({ color, size 
 
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { VideoLessonsScreen } from '../screens/learn/VideoLessonsScreen';
+import { EClassScreen } from '../screens/learn/EClassScreen';
 import { RoadSignsScreen } from '../screens/learn/RoadSignsScreen';
 import { TopicsScreen } from '../screens/learn/TopicsScreen';
 import { ChapterScreen } from '../screens/learn/ChapterScreen';
 import { QuizChallengeScreen } from '../screens/challenges/QuizChallengeScreen';
 import { DictionaryScreen } from '../screens/dictionary/DictionaryScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { ProgressScreen } from '../screens/profile/ProgressScreen';
+import { PracticalDrivingScreen } from '../screens/practical/PracticalDrivingScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -98,7 +101,9 @@ export const MainTabNavigator: React.FC = () => {
             currentRoute === 'Learn' ||
             currentRoute === 'RoadSigns' ||
             currentRoute === 'Topics' ||
-            currentRoute === 'Chapter';
+            currentRoute === 'Chapter' ||
+            currentRoute === 'EClass' ||
+            currentRoute === 'PracticalDriving';
 
           return {
             tabBarLabel: 'Learn',
@@ -134,6 +139,14 @@ export const MainTabNavigator: React.FC = () => {
           tabBarItemStyle: { display: 'none' },
         }}
       />
+	  <Tab.Screen
+		  name="EClass"
+		  component={EClassScreen}
+		  options={{
+			tabBarButton: () => null,
+			tabBarItemStyle: { display: 'none' },
+		  }}
+		/>
       <Tab.Screen
         name="Topics"
         component={TopicsScreen}
@@ -145,6 +158,14 @@ export const MainTabNavigator: React.FC = () => {
       <Tab.Screen
         name="Chapter"
         component={ChapterScreen}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+        }}
+      />
+      <Tab.Screen
+        name="PracticalDriving"
+        component={PracticalDrivingScreen}
         options={{
           tabBarButton: () => null,
           tabBarItemStyle: { display: 'none' },
@@ -196,24 +217,45 @@ export const MainTabNavigator: React.FC = () => {
       />
 
       <Tab.Screen
+        name="Progress"
+        component={ProgressScreen}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+        }}
+      />
+
+      <Tab.Screen
         name="Me"
         component={ProfileScreen}
-        options={{
-          tabBarLabel: 'Me',
-          tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.iconContainer,
-                focused && { backgroundColor: activePillBg },
-              ]}
-            >
-              <User
-                size={22}
-                color={focused ? activeColor : inactiveColor}
-                strokeWidth={focused ? 2.5 : 2}
-              />
-            </View>
-          ),
+        options={({ navigation }) => {
+          const state = navigation.getState();
+          const currentRoute = state?.routes[state?.index]?.name;
+          const isMeSection = currentRoute === 'Me' || currentRoute === 'Progress';
+
+          return {
+            tabBarLabel: 'Me',
+            tabBarLabelStyle: {
+              fontSize: 11,
+              fontWeight: '700',
+              marginTop: 2,
+              color: isMeSection ? activeColor : inactiveColor,
+            },
+            tabBarIcon: () => (
+              <View
+                style={[
+                  styles.iconContainer,
+                  isMeSection && { backgroundColor: activePillBg },
+                ]}
+              >
+                <User
+                  size={22}
+                  color={isMeSection ? activeColor : inactiveColor}
+                  strokeWidth={isMeSection ? 2.5 : 2}
+                />
+              </View>
+            ),
+          };
         }}
       />
     </Tab.Navigator>

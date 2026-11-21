@@ -12,3 +12,13 @@ web-build/
 
 # macOS
 .DS_Store
+
+# Temporary comparison screenshots & build artifacts
+*.png
+/Screens.zip
+/Screens/
+src - Copy/
+.superpowers/
+start_emulator.bat
+swagger.json
+!assets/**/*.png

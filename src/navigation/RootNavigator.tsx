@@ -14,10 +14,10 @@ import { QuizQuestionScreen } from '../screens/quiz/QuizQuestionScreen';
 import { ExamSimulationScreen } from '../screens/quiz/ExamSimulationScreen';
 import { ExamResultScreen } from '../screens/quiz/ExamResultScreen';
 import { ReviewScreen } from '../screens/quiz/ReviewScreen';
-import { EClassScreen } from '../screens/learn/EClassScreen';
 import { TeacherChatScreen } from '../screens/chat/TeacherChatScreen';
 import { SupportChatScreen } from '../screens/chat/SupportChatScreen';
 import { PaywallScreen } from '../screens/profile/PaywallScreen';
+import { ProgressScreen } from '../screens/profile/ProgressScreen';
 import { QuizSettingsScreen } from '../screens/profile/QuizSettingsScreen';
 import { QuizChallengeScreen } from '../screens/challenges/QuizChallengeScreen';
 import { LiveDuelScreen } from '../screens/challenges/LiveDuelScreen';
@@ -45,12 +45,19 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="LessonPlayer" component={LessonPlayerScreen} />
       <Stack.Screen name="Topics" component={TopicsScreen} />
       <Stack.Screen name="Chapter" component={ChapterScreen} />
-      <Stack.Screen name="EClass" component={EClassScreen} />
 
       {/* Quiz & Exam */}
       <Stack.Screen name="StudyMode" component={StudyModeScreen} />
       <Stack.Screen name="QuizQuestion" component={QuizQuestionScreen} />
-      <Stack.Screen name="ExamSimulation" component={ExamSimulationScreen} />
+      <Stack.Screen
+        name="ExamSimulation"
+        component={ExamSimulationScreen}
+        options={{
+          gestureEnabled: false,
+          headerBackButtonMenuEnabled: false,
+          fullScreenGestureEnabled: false,
+        }}
+      />
       <Stack.Screen name="ExamResult" component={ExamResultScreen} />
       <Stack.Screen name="Review" component={ReviewScreen} />
 
@@ -73,6 +80,7 @@ export const RootNavigator: React.FC = () => {
         component={PaywallScreen}
         options={{ presentation: 'modal' }}
       />
+      <Stack.Screen name="Progress" component={ProgressScreen} />
       <Stack.Screen name="QuizSettings" component={QuizSettingsScreen} />
     </Stack.Navigator>
   );

@@ -173,11 +173,18 @@ export const HomeScreen: React.FC = () => {
             style={styles.heroCard}
           >
             <View style={styles.heroLeft}>
-              <Text style={styles.heroTag}>EXAM READINESS</Text>
-              <Text style={styles.heroTitle}>On track to pass</Text>
-              <Text style={styles.heroSub}>
-                Theory exam in 18 days · 5 of 7 simulations passed
-              </Text>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('Progress')}
+                accessibilityRole="button"
+                accessibilityLabel="View exam readiness progress"
+              >
+                <Text style={styles.heroTag}>EXAM READINESS</Text>
+                <Text style={styles.heroTitle}>On track to pass</Text>
+                <Text style={styles.heroSub}>
+                  Theory exam in 18 days · 5 of 7 simulations passed
+                </Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.heroButton}
@@ -191,7 +198,13 @@ export const HomeScreen: React.FC = () => {
             </View>
 
             {/* Pure Code-Driven SVG Circular Readiness Gauge */}
-            <View style={styles.heroRight}>
+            <TouchableOpacity
+              style={styles.heroRight}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('Progress')}
+              accessibilityRole="button"
+              accessibilityLabel="View progress statistics"
+            >
               <CircularGauge
                 value={78}
                 size={92}
@@ -201,7 +214,7 @@ export const HomeScreen: React.FC = () => {
                 textColor="#FFFFFF"
                 fontSize={20}
               />
-            </View>
+            </TouchableOpacity>
           </LinearGradient>
 
           {/* 6-Grid Feature Cards (3 columns x 2 rows) */}
@@ -387,7 +400,9 @@ export const HomeScreen: React.FC = () => {
                     borderColor: isDark ? '#1E2740' : '#EAECF0',
                   },
                 ]}
-                onPress={() => navigation.navigate('EClass')}
+                onPress={() =>
+                  navigation.navigate('MainTabs', { screen: 'EClass' })
+                }
                 activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel="E-Class, Live 20:30"

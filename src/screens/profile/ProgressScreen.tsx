@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
+  BackHandler,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -39,11 +40,39 @@ export const ProgressScreen: React.FC = () => {
     { name: 'Danger signs', percent: 96, color: '#10B981' },
   ];
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs', { screen: 'Home' });
+    }
+  };
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
       {/* Top Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Progress</Text>
+        <View style={styles.titleRow}>
+          {navigation.canGoBack() && (
+            <TouchableOpacity
+              onPress={handleBack}
+              style={styles.backBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+            </TouchableOpacity>
+          )}
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Progress</Text>
+        </View>
         <View style={[styles.readinessPill, { backgroundColor: colors.primaryLight }]}>
           <Text style={[styles.readinessText, { color: colors.primary }]}>Readiness 78%</Text>
         </View>
@@ -208,6 +237,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backBtn: {
+    padding: 4,
+    marginRight: 2,
   },
   title: {
     fontSize: 26,

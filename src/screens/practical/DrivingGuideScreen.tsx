@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -16,62 +17,105 @@ import { mockDrivingGuideManeuver } from '../../api/mockData';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+/* Diagram palette (same in light and dark, it is an illustration) */
+const ROAD = '#3F4654';
+const DASH = '#A0A6B2';
+const PARKED = '#92A1BA';
+const CURB = '#9AA1AF';
+const ORANGE = '#FBB024';
+const VIDEO_RED = '#C8201A';
+
+const DASH_COUNT = 6;
+
 export const DrivingGuideScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const [bookmarked, setBookmarked] = useState(false);
   const [activeStepId, setActiveStepId] = useState(3);
 
   const data = mockDrivingGuideManeuver;
 
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs');
+    }
+  }, [navigation]);
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      edges={['top', 'left', 'right']}
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={[styles.headerBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={handleBack}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>{data.title}</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>{data.subtitle}</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
+            {data.title}
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={1}>
+            {data.subtitle}
+          </Text>
         </View>
 
-        <TouchableOpacity style={styles.backButton} onPress={() => setBookmarked(!bookmarked)}>
+        <TouchableOpacity
+          style={[styles.headerBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => setBookmarked(!bookmarked)}
+          accessibilityRole="button"
+          accessibilityLabel={bookmarked ? 'Remove bookmark' : 'Add bookmark'}
+        >
           <Ionicons
             name={bookmarked ? 'bookmark' : 'bookmark-outline'}
-            size={22}
+            size={20}
             color={colors.textPrimary}
           />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Overhead Maneuver Visual Card */}
-        <View style={[styles.diagramCard, { backgroundColor: '#334155' }]}>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Overhead Manoeuvre Visual Card */}
+        <View style={styles.diagramCard}>
           {/* Road markings */}
-          <View style={styles.dashLineTop}>
-            <View style={styles.dashSegment} />
-            <View style={styles.dashSegment} />
-            <View style={styles.dashSegment} />
-            <View style={styles.dashSegment} />
+          {Array.from({ length: DASH_COUNT }).map((_, i) => (
+            <View key={i} style={[styles.dashSegment, { left: 11.5 + i * 58 }]} />
+          ))}
+
+          {/* Trajectory (dashed S-curve + start dot) */}
+          <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <Svg width="100%" height="100%" viewBox="0 0 698 340">
+              <Path
+                d="M219 245 C309 235 359 100 481 94"
+                stroke={ORANGE}
+                strokeWidth={5}
+                strokeDasharray="9 12"
+                strokeLinecap="round"
+                fill="none"
+              />
+              <Circle cx={219} cy={245} r={12} fill={ORANGE} />
+            </Svg>
           </View>
 
           {/* Parked cars & YOU car */}
-          <View style={styles.carsRow}>
-            <View style={[styles.parkedCar, { backgroundColor: '#64748B' }]} />
+          <View style={[styles.parkedCar, { left: 23.5 }]} />
+          <View style={[styles.parkedCar, { right: 23.5 }]} />
 
-            {/* Trajectory dotted curve */}
-            <View style={styles.trajectoryArc}>
-              <View style={styles.startPointDot} />
-            </View>
-
-            <View style={[styles.youCar, { backgroundColor: colors.primary }]}>
-              <Text style={styles.youText}>YOU</Text>
-            </View>
-
-            <View style={[styles.parkedCar, { backgroundColor: '#64748B' }]} />
+          <View style={[styles.youCar, { backgroundColor: colors.primary }]}>
+            <Text style={styles.youText}>YOU</Text>
           </View>
 
           <View style={styles.curbLine} />
@@ -85,15 +129,25 @@ export const DrivingGuideScreen: React.FC = () => {
             </Text>
           </View>
 
-          <TouchableOpacity style={[styles.mediaPill, { backgroundColor: colors.errorLight }]}>
-            <Ionicons name="play" size={14} color={colors.error} />
-            <Text style={[styles.mediaPillText, { color: colors.error }]}>Video 2:10</Text>
-          </TouchableOpacity>
+          <View style={styles.mediaPills}>
+            <TouchableOpacity
+              style={[styles.videoPill, { backgroundColor: colors.errorLight }]}
+              accessibilityRole="button"
+              accessibilityLabel="Play video"
+            >
+              <View style={styles.videoTriangle} />
+              <Text style={[styles.mediaPillText, { color: VIDEO_RED }]}>Video 2:10</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.mediaPill, { backgroundColor: colors.primaryLight }]}>
-            <Ionicons name="headset" size={14} color={colors.primary} />
-            <Text style={[styles.mediaPillText, { color: colors.primary }]}>Bangla audio</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.audioPill, { backgroundColor: colors.primaryLight }]}
+              accessibilityRole="button"
+              accessibilityLabel="Play Bangla audio"
+            >
+              <Ionicons name="headset" size={13} color={colors.primary} />
+              <Text style={[styles.mediaPillText, { color: colors.primary }]}>Bangla audio</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Step-by-Step Checklist */}
@@ -107,30 +161,31 @@ export const DrivingGuideScreen: React.FC = () => {
                 key={step.id}
                 style={[
                   styles.stepCard,
-                  {
-                    backgroundColor: isActive ? colors.primaryLight : colors.card,
-                    borderColor: isActive ? colors.primary : colors.border,
-                    borderWidth: isActive ? 1.5 : 1,
-                  },
+                  isActive && styles.stepCardActive,
+                  isActive && { backgroundColor: colors.primaryLight },
                 ]}
                 onPress={() => setActiveStepId(step.id)}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
               >
                 {/* Step indicator circle / checkmark */}
                 <View
                   style={[
                     styles.stepBadge,
-                    {
-                      backgroundColor: isDone
-                        ? colors.success
-                        : isActive
-                        ? colors.primary
-                        : colors.chipBackground,
-                    },
+                    isDone
+                      ? { backgroundColor: colors.success }
+                      : isActive
+                      ? { backgroundColor: colors.primary }
+                      : {
+                          backgroundColor: colors.card,
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                        },
                   ]}
                 >
                   {isDone ? (
-                    <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                    <Ionicons name="checkmark" size={15} color="#FFFFFF" />
                   ) : (
                     <Text
                       style={[
@@ -157,7 +212,7 @@ export const DrivingGuideScreen: React.FC = () => {
                     {step.text}
                   </Text>
                   {isActive && step.subtext ? (
-                    <Text style={[styles.stepSubText, { color: colors.textSecondary }]}>
+                    <Text style={[styles.stepSubText, { color: colors.textMuted }]}>
                       {step.subtext}
                     </Text>
                   ) : null}
@@ -171,150 +226,196 @@ export const DrivingGuideScreen: React.FC = () => {
   );
 };
 
+export default DrivingGuideScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
+  /* Header */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 2,
+    paddingBottom: 12,
   },
-  backButton: {
-    padding: 6,
+  headerBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerCenter: {
+    flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 8,
   },
   title: {
-    fontSize: 18,
+    fontSize: 16,
+    lineHeight: 20,
     fontWeight: '800',
+    letterSpacing: -0.2,
   },
   subtitle: {
     fontSize: 12,
+    lineHeight: 15,
+    marginTop: 1,
   },
+
   content: {
     paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 40,
-    gap: 16,
+    gap: 12.5,
   },
+
+  /* Diagram */
   diagramCard: {
-    height: 180,
-    borderRadius: 20,
-    padding: 16,
-    justifyContent: 'space-between',
+    height: 170,
+    borderRadius: 22,
+    backgroundColor: ROAD,
     overflow: 'hidden',
   },
-  dashLineTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
   dashSegment: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#94A3B8',
-    borderRadius: 2,
-  },
-  carsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    position: 'relative',
+    position: 'absolute',
+    top: 12,
+    width: 24,
+    height: 2.5,
+    borderRadius: 1.25,
+    backgroundColor: DASH,
   },
   parkedCar: {
-    width: 60,
+    position: 'absolute',
+    top: 106,
+    width: 70,
     height: 34,
-    borderRadius: 8,
+    borderRadius: 10,
+    backgroundColor: PARKED,
   },
   youCar: {
-    width: 65,
-    height: 36,
-    borderRadius: 8,
+    position: 'absolute',
+    right: 33.5,
+    top: 30,
+    width: 70,
+    height: 34,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   youText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  trajectoryArc: {
-    position: 'absolute',
-    left: 80,
-    top: 10,
-  },
-  startPointDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#F59E0B',
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+    includeFontPadding: false,
   },
   curbLine: {
-    height: 8,
-    backgroundColor: '#64748B',
-    borderRadius: 4,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 26,
+    backgroundColor: CURB,
   },
+
+  /* Pills */
   pillsRow: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   metaPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
+    height: 22,
+    paddingHorizontal: 9,
+    borderRadius: 11,
+    justifyContent: 'center',
   },
   metaPillText: {
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '700',
+    includeFontPadding: false,
   },
-  mediaPill: {
+  mediaPills: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-    gap: 6,
+    gap: 7,
+  },
+  videoPill: {
+    height: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 12,
+    paddingRight: 10,
+    borderRadius: 11,
+    gap: 7.5,
+  },
+  videoTriangle: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6.5,
+    borderTopWidth: 4,
+    borderBottomWidth: 4,
+    borderLeftColor: VIDEO_RED,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+  },
+  audioPill: {
+    height: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 10,
+    paddingRight: 9.5,
+    borderRadius: 11,
+    gap: 4,
   },
   mediaPillText: {
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '700',
+    includeFontPadding: false,
   },
+
+  /* Steps */
   stepsList: {
-    gap: 12,
+    gap: 4,
   },
   stepCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: 16,
-    borderRadius: 18,
-    borderWidth: 1,
-    gap: 14,
+    paddingVertical: 4,
+    paddingHorizontal: 11.5,
+    borderRadius: 20,
+    gap: 12,
+  },
+  stepCardActive: {
+    paddingVertical: 10,
   },
   stepBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
   },
   stepBadgeText: {
     fontSize: 13,
     fontWeight: '700',
+    includeFontPadding: false,
   },
   stepBody: {
     flex: 1,
   },
   stepMainText: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14.5,
+    lineHeight: 19,
   },
   stepSubText: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 2,
   },
 });

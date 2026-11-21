@@ -145,7 +145,7 @@ export const QuizChallengeScreen: React.FC = () => {
           {/* 3. Challenge your batch */}
           <TouchableOpacity
             style={[styles.actionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('EClass')}
+            onPress={() => navigation.navigate('MainTabs', { screen: 'EClass' })}
             activeOpacity={0.7}
           >
             <View style={[styles.actionIconBox, { backgroundColor: colors.warningLight }]}>

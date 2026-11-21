@@ -4,10 +4,13 @@ export type MainTabParamList = {
   Home: undefined;
   Learn: undefined;
   RoadSigns: undefined;
+  EClass: undefined;
   Topics: undefined;
   Chapter: { chapterId?: number; title?: string } | undefined;
+  PracticalDriving: undefined;
   Practice: undefined;
   Dictionary: undefined;
+  Progress: undefined;
   Me: undefined;
 };
 
@@ -24,10 +27,10 @@ export type RootStackParamList = {
   ExamSimulation: undefined;
   ExamResult: { examId?: number; score?: number; passed?: boolean } | undefined;
   Review: undefined;
-  EClass: undefined;
   TeacherChat: undefined;
   SupportChat: undefined;
   Paywall: undefined;
+  Progress: undefined;
   QuizSettings: undefined;
   QuizChallenge: undefined;
   LiveDuel: undefined;

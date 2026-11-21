@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  BackHandler,
   ScrollView,
   StyleSheet,
   Text,
@@ -163,7 +164,7 @@ export const ExamSimulationScreen: React.FC = () => {
   const [answers, setAnswers] = useState<Answers>(INITIAL_ANSWERS);
   const [secondsRemaining, setSecondsRemaining] = useState(INITIAL_SECONDS);
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<any>(null);
   const endAtRef = useRef(Date.now() + INITIAL_SECONDS * 1000);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const finishedRef = useRef(false);
@@ -240,7 +241,7 @@ export const ExamSimulationScreen: React.FC = () => {
   const finishExam = useCallback(() => {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    allowLeaveRef.current = true; // bypass the exit confirmation
+    allowLeaveRef.current = true;
     cancelAdvance();
 
     const given = answersRef.current;
@@ -265,31 +266,34 @@ export const ExamSimulationScreen: React.FC = () => {
   }, [finishExam]);
 
   /* ---- exit guard ----
-     The design has no close button, so leaving happens via the Android back button
-     or the iOS swipe-back gesture. Both go through `beforeRemove`. */
+     Hardware back button handling for Android. On iOS, gestureEnabled is false in the navigator. */
+
+  const confirmExit = useCallback(() => {
+    Alert.alert('Exit exam', 'Your progress will be lost. Are you sure?', [
+      { text: 'Stay', style: 'cancel' },
+      {
+        text: 'Exit',
+        style: 'destructive',
+        onPress: () => {
+          allowLeaveRef.current = true;
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate('MainTabs');
+          }
+        },
+      },
+    ]);
+  }, [navigation]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      if (allowLeaveRef.current) return;
-      e.preventDefault();
-      Alert.alert('Exit exam', 'Your progress will be lost. Are you sure?', [
-        { text: 'Stay', style: 'cancel' },
-        {
-          text: 'Exit',
-          style: 'destructive',
-          onPress: () => {
-            allowLeaveRef.current = true;
-            if (navigation.canGoBack()) {
-              navigation.dispatch(e.data.action);
-            } else {
-              navigation.navigate('MainTabs');
-            }
-          },
-        },
-      ]);
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (allowLeaveRef.current || finishedRef.current) return false;
+      confirmExit();
+      return true;
     });
-    return unsubscribe;
-  }, [navigation]);
+    return () => sub.remove();
+  }, [confirmExit]);
 
   /* ---- timer: deadline based, accurate after backgrounding ---- */
 

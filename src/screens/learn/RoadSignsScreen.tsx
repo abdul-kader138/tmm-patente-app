@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-/**
- * Road-sign pictograms drawn with plain React Native Views.
- * No images, no cropped screenshots and no extra packages.
- * Sizes are in dp and were measured from the 780px-wide (2x) mockup.
- */
+/** The mockup has no back arrow. Flip to true if you need a visible one. */
+const SHOW_BACK_BUTTON = false;
+
+/* -------------------------------------------------------------------------- */
+/* Road-sign pictograms (plain Views; dp measured from the 2x / 780px mockup)  */
+/* -------------------------------------------------------------------------- */
 
 export type RoadSignGlyphType =
   | 'levelCrossing'
@@ -41,10 +42,6 @@ const TRI_W = 58;
 const TRI_H = 51;
 const TRI_BORDER = 6;
 const STOP_SIZE = 53;
-
-/* -------------------------------------------------------------------------- */
-/* Triangle (red frame + white fill), built with the CSS border technique      */
-/* -------------------------------------------------------------------------- */
 
 interface TriangleProps {
   direction: 'up' | 'down';
@@ -94,36 +91,49 @@ const Triangle: React.FC<TriangleProps> = ({ direction, children }) => {
     <View style={{ width: w, height: h }}>
       <View style={[styles.abs, build(w, h, RED)]} />
       <View style={[styles.abs, { left: innerLeft, top: innerTop }, build(innerW, innerH, WHITE)]} />
-      {children && (
-        <View
-          style={[
-            styles.abs,
-            styles.center,
-            { left: innerLeft, top: innerTop, width: innerW, height: innerH },
-          ]}
-        >
-          {children}
-        </View>
-      )}
+      {children}
     </View>
   );
 };
 
-/* -------------------------------------------------------------------------- */
-/* Individual Sign Glyphs                                                      */
-/* -------------------------------------------------------------------------- */
+/** Octagon = upright square ∩ same square rotated 45° (clipped by the container). */
+const Octagon: React.FC<{ size: number; color: string; children?: React.ReactNode }> = ({
+  size,
+  color,
+  children,
+}) => (
+  <View style={[styles.center, { width: size, height: size, overflow: 'hidden' }]}>
+    <View
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: color,
+        transform: [{ rotate: '45deg' }],
+      }}
+    />
+    <View style={[styles.abs, styles.center, { width: size, height: size }]}>{children}</View>
+  </View>
+);
 
-const BARRIER_W = 28;
-const BARRIER_H = 16;
-const POST_DIST = (BARRIER_W - 2) / 4;
+const BARRIER_W = 25;
+const BARRIER_H = 13;
+const BARRIER_POSTS = 7;
 
 const LevelCrossing = () => (
   <Triangle direction="up">
-    <View style={{ width: BARRIER_W, height: BARRIER_H, marginTop: 7 }}>
-      <View style={[styles.barrierRail, { top: 3.5, height: 2.2 }]} />
-      <View style={[styles.barrierRail, { bottom: 3.5, height: 2.2 }]} />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <View key={i} style={[styles.barrierPost, { left: i * POST_DIST }]} />
+    <View
+      style={[
+        styles.abs,
+        { width: BARRIER_W, height: BARRIER_H, left: (TRI_W - BARRIER_W) / 2, top: 27.5 },
+      ]}
+    >
+      <View style={[styles.barrierRail, { top: 0, height: 2.5 }]} />
+      <View style={[styles.barrierRail, { top: 5.5, height: 2 }]} />
+      {Array.from({ length: BARRIER_POSTS }).map((_, i) => (
+        <View
+          key={i}
+          style={[styles.barrierPost, { left: (i * (BARRIER_W - 2)) / (BARRIER_POSTS - 1) }]}
+        />
       ))}
     </View>
   </Triangle>
@@ -132,9 +142,13 @@ const LevelCrossing = () => (
 const GiveWay = () => <Triangle direction="down" />;
 
 const Stop = () => (
-  <View style={[styles.circle, { backgroundColor: RED, width: STOP_SIZE, height: STOP_SIZE }]}>
-    <Text style={styles.stopText}>STOP</Text>
-  </View>
+  <Octagon size={STOP_SIZE} color={WHITE}>
+    <Octagon size={STOP_SIZE - 4} color={RED}>
+      <Text style={styles.stopText} allowFontScaling={false}>
+        STOP
+      </Text>
+    </Octagon>
+  </Octagon>
 );
 
 const NoEntry = () => (
@@ -146,12 +160,14 @@ const NoEntry = () => (
 const SpeedLimit: React.FC<{ value: number }> = ({ value }) => (
   <View style={[styles.circle, { backgroundColor: RED }]}>
     <View style={styles.speedInner}>
-      <Text style={styles.speedText}>{value}</Text>
+      <Text style={styles.speedText} allowFontScaling={false}>
+        {value}
+      </Text>
     </View>
   </View>
 );
 
-const ARROW_W = 22;
+const ARROW_W = 28;
 const ARROW_H = 33;
 const ARROW_STROKE = 3.2;
 const ARROW_ARM = 20;
@@ -186,15 +202,27 @@ const GoStraight = () => (
   </View>
 );
 
-/* -------------------------------------------------------------------------- */
-/* Public RoadSignGlyph component                                              */
-/* -------------------------------------------------------------------------- */
+/** Thin "arrow into base line" download icon from the Offline pill (10 x 11 dp). */
+const DownloadGlyph: React.FC<{ color: string }> = ({ color }) => (
+  <View style={{ width: 10, height: 11 }}>
+    <View style={[styles.dlBar, { left: 4.1, top: 0, width: 1.8, height: 7.2, backgroundColor: color }]} />
+    <View
+      style={[
+        styles.dlBar,
+        { left: 0.65, top: 4.5, width: 5.1, height: 1.8, backgroundColor: color, transform: [{ rotate: '45deg' }] },
+      ]}
+    />
+    <View
+      style={[
+        styles.dlBar,
+        { left: 4.25, top: 4.5, width: 5.1, height: 1.8, backgroundColor: color, transform: [{ rotate: '-45deg' }] },
+      ]}
+    />
+    <View style={[styles.dlBar, { left: 0, top: 9.2, width: 10, height: 1.8, backgroundColor: color }]} />
+  </View>
+);
 
-export interface RoadSignGlyphProps {
-  type: RoadSignGlyphType;
-}
-
-export const RoadSignGlyph: React.FC<RoadSignGlyphProps> = ({ type }) => {
+export const RoadSignGlyph: React.FC<{ type: RoadSignGlyphType }> = ({ type }) => {
   switch (type) {
     case 'levelCrossing':
       return <LevelCrossing />;
@@ -214,7 +242,7 @@ export const RoadSignGlyph: React.FC<RoadSignGlyphProps> = ({ type }) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/* RoadSignsScreen                                                            */
+/* Screen                                                                     */
 /* -------------------------------------------------------------------------- */
 
 interface RoadSignItem {
@@ -226,49 +254,20 @@ interface RoadSignItem {
 }
 
 const ROAD_SIGNS: RoadSignItem[] = [
-  {
-    id: 1,
-    name: 'Level crossing with barriers',
-    category: 'Danger',
-    masteryPercent: 96,
-    glyph: 'levelCrossing',
-  },
-  {
-    id: 2,
-    name: 'Give way',
-    category: 'Right of way',
-    masteryPercent: 100,
-    glyph: 'giveWay',
-  },
-  {
-    id: 3,
-    name: 'Stop',
-    category: 'Right of way',
-    masteryPercent: 90,
-    glyph: 'stop',
-  },
-  {
-    id: 4,
-    name: 'No entry',
-    category: 'Prohibition',
-    masteryPercent: 82,
-    glyph: 'noEntry',
-  },
-  {
-    id: 5,
-    name: 'Speed limit 50',
-    category: 'Prohibition',
-    masteryPercent: 75,
-    glyph: 'speedLimit50',
-  },
-  {
-    id: 6,
-    name: 'Go straight only',
-    category: 'Mandatory',
-    masteryPercent: 60,
-    glyph: 'goStraight',
-  },
+  { id: 1, name: 'Level crossing with barriers', category: 'Danger', masteryPercent: 96, glyph: 'levelCrossing' },
+  { id: 2, name: 'Give way', category: 'Right of way', masteryPercent: 100, glyph: 'giveWay' },
+  { id: 3, name: 'Stop', category: 'Right of way', masteryPercent: 90, glyph: 'stop' },
+  { id: 4, name: 'No entry', category: 'Prohibition', masteryPercent: 82, glyph: 'noEntry' },
+  { id: 5, name: 'Speed limit 50', category: 'Prohibition', masteryPercent: 75, glyph: 'speedLimit50' },
+  { id: 6, name: 'Go straight only', category: 'Mandatory', masteryPercent: 60, glyph: 'goStraight' },
 ];
+
+const CATEGORIES = ['All', 'Danger', 'Prohibition', 'Mandatory', 'Info'];
+const MASTERY_GOOD_THRESHOLD = 90;
+const MASTERY_WARNING_COLOR = '#F59E0B';
+// Offline pill uses a deeper green than the mastery dots (matches the mockup).
+const OFFLINE_COLOR = '#0E8F50';
+const OFFLINE_BG = '#e1f5ea';
 
 export const RoadSignsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -276,8 +275,6 @@ export const RoadSignsScreen: React.FC = () => {
 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [search, setSearch] = useState('');
-
-  const categories = ['All', 'Danger', 'Prohibition', 'Mandatory', 'Info'];
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -295,49 +292,55 @@ export const RoadSignsScreen: React.FC = () => {
     return () => sub.remove();
   }, [handleBack]);
 
-  const filteredSigns = ROAD_SIGNS.filter((item) => {
-    const matchCat =
-      selectedCategory === 'All' ||
-      item.category.toLowerCase().includes(selectedCategory.toLowerCase());
-    const matchSearch =
-      search.trim() === '' ||
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.category.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  });
+  const filteredSigns = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return ROAD_SIGNS.filter((item) => {
+      const matchCat = selectedCategory === 'All' || item.category === selectedCategory;
+      const matchSearch =
+        q === '' || item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q);
+      return matchCat && matchSearch;
+    });
+  }, [selectedCategory, search]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top', 'left', 'right']}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={handleBack}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Road signs</Text>
-        <TouchableOpacity style={[styles.offlineBtn, { backgroundColor: colors.successLight }]}>
-          <Ionicons name="download" size={14} color={colors.success} />
-          <Text style={[styles.offlineBtnText, { color: colors.success }]}>Offline</Text>
+        <View style={styles.titleWrap}>
+          {SHOW_BACK_BUTTON && (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={handleBack}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+            </TouchableOpacity>
+          )}
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Road signs</Text>
+        </View>
+        <TouchableOpacity style={[styles.offlineBtn, { backgroundColor: OFFLINE_BG }]}>
+          <DownloadGlyph color={OFFLINE_COLOR} />
+          <Text style={[styles.offlineBtnText, { color: OFFLINE_COLOR }]}>Offline</Text>
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchSection}>
         <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Ionicons name="search" size={18} color={colors.textMuted} />
+          <Ionicons name="search" size={20} color={colors.textMuted} />
           <TextInput
-            placeholder="Search 400+ road signs..."
+            placeholder="Search 400+ road signs"
             placeholderTextColor={colors.textMuted}
             value={search}
             onChangeText={setSearch}
             style={[styles.searchInput, { color: colors.textPrimary }]}
           />
           <TouchableOpacity style={[styles.filterBadge, { backgroundColor: colors.primaryLight }]}>
-            <Ionicons name="warning-outline" size={16} color={colors.primary} />
+            <Ionicons name="warning-outline" size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -347,9 +350,9 @@ export const RoadSignsScreen: React.FC = () => {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={categories}
+          data={CATEGORIES}
           keyExtractor={(item) => item}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
+          contentContainerStyle={styles.categoriesContent}
           renderItem={({ item }) => {
             const isSelected = selectedCategory === item;
             return (
@@ -357,8 +360,8 @@ export const RoadSignsScreen: React.FC = () => {
                 style={[
                   styles.categoryChip,
                   {
-                    backgroundColor: isSelected ? colors.primary : colors.card,
-                    borderColor: isSelected ? colors.primary : colors.border,
+                    backgroundColor: isSelected ? colors.textPrimary : colors.card,
+                    borderColor: isSelected ? colors.textPrimary : colors.border,
                   },
                 ]}
                 onPress={() => setSelectedCategory(item)}
@@ -366,7 +369,7 @@ export const RoadSignsScreen: React.FC = () => {
                 <Text
                   style={[
                     styles.categoryChipText,
-                    { color: isSelected ? '#FFFFFF' : colors.textPrimary },
+                    { color: isSelected ? colors.background : colors.textPrimary },
                   ]}
                 >
                   {item}
@@ -384,18 +387,19 @@ export const RoadSignsScreen: React.FC = () => {
         keyExtractor={(item) => item.id.toString()}
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, { color: colors.textMuted }]}>No signs found</Text>
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[styles.signCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => navigation.navigate('QuizQuestion', { topicId: item.id, mode: 'practice' })}
             activeOpacity={0.7}
           >
-            {/* Visual Frame with pure vector pictogram */}
             <View style={[styles.visualFrame, { backgroundColor: colors.cardHighlight }]}>
               <RoadSignGlyph type={item.glyph} />
             </View>
 
-            {/* Info */}
             <View style={styles.signInfo}>
               <Text style={[styles.signName, { color: colors.textPrimary }]} numberOfLines={2}>
                 {item.name}
@@ -405,7 +409,17 @@ export const RoadSignsScreen: React.FC = () => {
                   {item.category}
                 </Text>
                 <View style={styles.masteryPill}>
-                  <View style={[styles.masteryDot, { backgroundColor: colors.success }]} />
+                  <View
+                    style={[
+                      styles.masteryDot,
+                      {
+                        backgroundColor:
+                          item.masteryPercent >= MASTERY_GOOD_THRESHOLD
+                            ? colors.success
+                            : MASTERY_WARNING_COLOR,
+                      },
+                    ]}
+                  />
                   <Text style={[styles.masteryText, { color: colors.textPrimary }]}>
                     {item.masteryPercent}%
                   </Text>
@@ -419,132 +433,108 @@ export const RoadSignsScreen: React.FC = () => {
   );
 };
 
+export default RoadSignsScreen;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+
+  /* Header */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingTop: 4,
+    paddingBottom: 14,
   },
-  backButton: {
-    padding: 6,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-  },
+  titleWrap: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
+  backButton: { marginLeft: -6, marginRight: 4, padding: 6 },
+  title: { fontSize: 28, lineHeight: 34, fontWeight: '800', letterSpacing: -0.5 },
   offlineBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: 23,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    gap: 4,
+    borderRadius: 12,
+    gap: 6,
   },
-  offlineBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  searchSection: {
-    paddingHorizontal: 20,
-    marginVertical: 8,
-  },
+  offlineBtnText: { fontSize: 11, lineHeight: 14, fontWeight: '700', includeFontPadding: false },
+  dlBar: { position: 'absolute', borderRadius: 1 },
+
+  /* Search */
+  searchSection: { paddingHorizontal: 20, marginBottom: 14 },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 46,
-    borderRadius: 14,
+    height: 45,
+    borderRadius: 16,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    gap: 8,
+    paddingLeft: 13,
+    paddingRight: 7,
+    gap: 10,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-  },
+  searchInput: { flex: 1, fontSize: 15, padding: 0 },
   filterBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  categoriesRow: {
-    marginBottom: 14,
-  },
+
+  /* Chips */
+  categoriesRow: { marginBottom: 15 },
+  categoriesContent: { paddingHorizontal: 20, gap: 8 },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 20,
     borderWidth: 1,
   },
-  categoryChipText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
+  categoryChipText: { fontSize: 13, lineHeight: 15, fontWeight: '600' },
+
+  /* Grid */
+  listContent: { paddingHorizontal: 20, paddingBottom: 40 },
   columnWrapper: {
     justifyContent: 'space-between',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 14,
   },
+  emptyText: { textAlign: 'center', fontSize: 14, paddingTop: 40 },
   signCard: {
     width: '48%',
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 10,
+    padding: 9,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   visualFrame: {
-    height: 100,
-    borderRadius: 12,
+    height: 75,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  signInfo: {
-    gap: 4,
-  },
-  signName: {
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 17,
-    minHeight: 34,
-  },
+  signInfo: { gap: 8 },
+  signName: { fontSize: 13, lineHeight: 17, fontWeight: '600' },
   signMetaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    height: 14,
   },
-  categoryName: {
-    fontSize: 11,
-  },
-  masteryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  masteryDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  masteryText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  abs: {
-    position: 'absolute',
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  categoryName: { fontSize: 11 },
+  masteryPill: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  masteryDot: { width: 6, height: 6, borderRadius: 3 },
+  masteryText: { fontSize: 12, fontWeight: '600' },
+
+  /* Glyph helpers */
+  abs: { position: 'absolute' },
+  center: { alignItems: 'center', justifyContent: 'center' },
   circle: {
     width: ROUND_SIZE,
     height: ROUND_SIZE,
@@ -552,31 +542,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  barrierRail: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    backgroundColor: BLACK,
-  },
-  barrierPost: {
-    position: 'absolute',
-    top: 0,
-    width: 2,
-    height: BARRIER_H,
-    backgroundColor: BLACK,
-  },
+  barrierRail: { position: 'absolute', left: 0, right: 0, backgroundColor: BLACK },
+  barrierPost: { position: 'absolute', top: 0, width: 2, height: BARRIER_H, backgroundColor: BLACK },
   stopText: {
     color: WHITE,
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.3,
+    includeFontPadding: false,
   },
-  noEntryBar: {
-    width: 36.5,
-    height: 11,
-    borderRadius: 4,
-    backgroundColor: WHITE,
-  },
+  noEntryBar: { width: 36.5, height: 11, borderRadius: 4, backgroundColor: WHITE },
   speedInner: {
     width: 41,
     height: 41,
@@ -585,11 +560,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  speedText: {
-    color: BLACK,
-    fontSize: 21,
-    fontWeight: '800',
-  },
+  speedText: { color: BLACK, fontSize: 21, fontWeight: '800', includeFontPadding: false },
   arrowArm: {
     position: 'absolute',
     top: ARROW_W / 4 - ARROW_STROKE / 2,

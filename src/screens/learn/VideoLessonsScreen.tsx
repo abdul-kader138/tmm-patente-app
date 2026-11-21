@@ -12,7 +12,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Polygon, Rect, Circle } from 'react-native-svg';
-import { Search, Check, Download, Lock } from 'lucide-react-native';
+import { Search, Check, Download, Lock, ChevronRight } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
@@ -396,6 +396,32 @@ export const VideoLessonsScreen: React.FC = () => {
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* Practical Driving Entry */}
+          <TouchableOpacity
+            style={[
+              styles.practicalBanner,
+              {
+                backgroundColor: isDark ? '#131D38' : '#EFF6FF',
+                borderColor: isDark ? '#233463' : '#DBEAFE',
+              },
+            ]}
+            onPress={() => navigation.navigate('MainTabs', { screen: 'PracticalDriving' })}
+            activeOpacity={0.8}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.practicalTag}>PRACTICAL DRIVING</Text>
+              <Text style={[styles.practicalTitle, { color: colors.textPrimary }]}>
+                Road Lessons & Foglio Rosa
+              </Text>
+              <Text style={[styles.practicalSub, { color: colors.textMuted }]}>
+                Book in-car practice with Bangla instructors
+              </Text>
+            </View>
+            <View style={styles.practicalArrow}>
+              <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />
+            </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -667,5 +693,38 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  practicalBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 18,
+    marginBottom: 12,
+  },
+  practicalTag: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#2563EB',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  practicalTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  practicalSub: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  practicalArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 12,
   },
 });

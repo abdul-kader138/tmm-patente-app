@@ -1,0 +1,1 @@
+export { YellowCarIllustration } from './YellowCarIllustration';

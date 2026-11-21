@@ -61,6 +61,20 @@ export const ProfileScreen: React.FC = () => {
           <View style={[styles.groupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <TouchableOpacity
               style={styles.menuItem}
+              onPress={() => navigation.navigate('MainTabs', { screen: 'Progress' })}
+            >
+              <View style={[styles.menuIconBox, { backgroundColor: '#ECFDF5' }]}>
+                <Ionicons name="stats-chart" size={18} color="#10B981" />
+              </View>
+              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Learning progress</Text>
+              <Text style={[styles.menuValue, { color: colors.textMuted }]}>78% ready</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+
+            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
+
+            <TouchableOpacity
+              style={styles.menuItem}
               onPress={() => navigation.navigate('QuizSettings')}
             >
               <View style={[styles.menuIconBox, { backgroundColor: colors.primaryLight }]}>
@@ -96,6 +110,20 @@ export const ProfileScreen: React.FC = () => {
               </View>
               <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Quiz settings</Text>
               <Text style={[styles.menuValue, { color: colors.textMuted }]}>30 Q · 20 min</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+
+            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('MainTabs', { screen: 'PracticalDriving' })}
+            >
+              <View style={[styles.menuIconBox, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="car-sport" size={18} color="#2563EB" />
+              </View>
+              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Practical driving</Text>
+              <Text style={[styles.menuValue, { color: colors.textMuted }]}>Foglio rosa & lessons</Text>
               <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
