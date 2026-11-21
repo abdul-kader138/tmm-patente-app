@@ -1,323 +1,446 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import React, { memo, useCallback, useMemo } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+type McIconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+/* -------------------------------------------------------------------------- */
+/* Data                                                                       */
+/* -------------------------------------------------------------------------- */
+
+// TODO: replace with the real user / settings stores.
+const PROFILE = {
+  name: 'Rahim Uddin',
+  userId: '48213',
+  email: 'rahim@example.com',
+  premiumUntil: '2027-03-12' as string | null, // null => not premium
+  readinessPercent: 78,
+  licenceCategory: 'Patente B',
+  studyLanguage: 'English',
+  quizSummary: '30 Q · 20 min',
+  offlineSize: '1.2 GB',
+  licenceDaysLabel: '180 days',
+};
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Manual formatting (no Intl dependency): "2027-03-12" -> "12 Mar 2027"
+const formatDate = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${d} ${MONTHS[m - 1]} ${y}`;
+};
+
+const getInitials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p.charAt(0).toUpperCase())
+    .join('');
+
+/* -------------------------------------------------------------------------- */
+/* Palette (light + dark)                                                     */
+/* -------------------------------------------------------------------------- */
+
+const getPalette = (isDark: boolean) => ({
+  screenBg: isDark ? '#0A0E18' : '#F4F6FB',
+
+  avatarBg: isDark ? '#1B2552' : '#E8EEFF',
+  avatarText: isDark ? '#60A5FA' : '#2D5BFF',
+  name: isDark ? '#FFFFFF' : '#0F172A',
+  meta: isDark ? '#8F9BB3' : '#98A2B3',
+  badgeBg: isDark ? '#372818' : '#FDEFDB',
+  badgeText: isDark ? '#F59E0B' : '#B54708',
+
+  sectionTitle: isDark ? '#8F9BB3' : '#98A2B3',
+  cardBg: isDark ? '#131A2A' : '#FFFFFF',
+  cardBorder: isDark ? '#1E293B' : '#E8EAF1',
+  divider: isDark ? '#1E293B' : '#ECEEF3',
+  rowPressed: isDark ? '#1A2236' : '#F7F8FB',
+  label: isDark ? '#FFFFFF' : '#0F172A',
+  value: isDark ? '#8F9BB3' : '#98A2B3',
+  chevron: isDark ? '#64748B' : '#667085',
+
+  tone: {
+    blue: { bg: isDark ? '#1B2552' : '#E8EEFF', fg: isDark ? '#60A5FA' : '#2D5BFF' },
+    purple: { bg: isDark ? '#232042' : '#EEE9FD', fg: isDark ? '#BFA6FE' : '#5B2BD9' },
+    gray: { bg: isDark ? '#1B2336' : '#EEF0F6', fg: isDark ? '#CBD5E1' : '#344054' },
+    orange: { bg: isDark ? '#372818' : '#FDEFDB', fg: isDark ? '#F59E0B' : '#EA6A0A' },
+    red: { bg: isDark ? '#2D1618' : '#FEECEA', fg: isDark ? '#F97066' : '#B42318' },
+    green: { bg: isDark ? '#0C2B20' : '#E3F6EC', fg: isDark ? '#34D399' : '#12B76A' },
+  },
+});
+
+type Palette = ReturnType<typeof getPalette>;
+type Tone = keyof Palette['tone'];
+
+/* -------------------------------------------------------------------------- */
+/* Menu model                                                                 */
+/* -------------------------------------------------------------------------- */
+
+type IconSpec =
+  | { set: 'ion'; name: IoniconName; tone: Tone }
+  | { set: 'mci'; name: McIconName; tone: Tone };
+
+interface MenuItem {
+  key: string;
+  icon: IconSpec;
+  label: string;
+  value?: string;
+  onPress: () => void;
+}
+
+interface MenuSection {
+  key: string;
+  title: string;
+  items: MenuItem[];
+}
+
+/* -------------------------------------------------------------------------- */
+/* Row                                                                        */
+/* -------------------------------------------------------------------------- */
+
+interface MenuRowProps {
+  item: MenuItem;
+  isLast: boolean;
+  c: Palette;
+}
+
+const MenuRow = memo(({ item, isLast, c }: MenuRowProps) => {
+  const tone = c.tone[item.icon.tone];
+  return (
+    <>
+      <Pressable
+        onPress={item.onPress}
+        style={({ pressed }) => [styles.row, pressed && { backgroundColor: c.rowPressed }]}
+        accessibilityRole="button"
+        accessibilityLabel={item.value ? `${item.label}, ${item.value}` : item.label}
+      >
+        <View style={[styles.iconBox, { backgroundColor: tone.bg }]}>
+          {item.icon.set === 'ion' ? (
+            <Ionicons name={item.icon.name} size={18} color={tone.fg} />
+          ) : (
+            <MaterialCommunityIcons name={item.icon.name} size={19} color={tone.fg} />
+          )}
+        </View>
+
+        <Text style={[styles.label, { color: c.label }]} numberOfLines={1}>
+          {item.label}
+        </Text>
+
+        {!!item.value && (
+          <Text style={[styles.value, { color: c.value }]} numberOfLines={1}>
+            {item.value}
+          </Text>
+        )}
+
+        <Ionicons name="chevron-forward" size={16} color={c.chevron} />
+      </Pressable>
+      {!isLast && <View style={[styles.divider, { backgroundColor: c.divider }]} />}
+    </>
+  );
+});
+
+/* -------------------------------------------------------------------------- */
+/* Screen                                                                     */
+/* -------------------------------------------------------------------------- */
 
 export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { colors, mode, toggleTheme } = useTheme();
+  const { isDark, mode, toggleTheme } = useTheme();
+  const c = getPalette(isDark);
 
-  const handleLogout = () => {
+  const comingSoon = useCallback(
+    (title: string) => Alert.alert(title, 'This feature is coming soon.'),
+    [],
+  );
+
+  const handleLogout = useCallback(() => {
     Alert.alert('Log out', 'Are you sure you want to log out of your account?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => navigation.replace('Welcome') },
+      {
+        text: 'Log out',
+        style: 'destructive',
+        onPress: () => {
+          // TODO: await authStore.signOut() / clear tokens before navigating.
+          navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+        },
+      },
     ]);
-  };
+  }, [navigation]);
+
+  const sections = useMemo<MenuSection[]>(
+    () => [
+      {
+        key: 'learning',
+        title: 'LEARNING',
+        items: [
+          // Not in the mockup, kept on purpose.
+          {
+            key: 'progress',
+            icon: { set: 'ion', name: 'stats-chart', tone: 'green' },
+            label: 'Learning progress',
+            value: `${PROFILE.readinessPercent}% ready`,
+            onPress: () => navigation.navigate('MainTabs', { screen: 'Progress' }),
+          },
+          {
+            key: 'category',
+            icon: { set: 'ion', name: 'car', tone: 'blue' },
+            label: 'Licence category',
+            value: PROFILE.licenceCategory,
+            onPress: () => navigation.navigate('QuizSettings'),
+          },
+          {
+            key: 'language',
+            icon: { set: 'ion', name: 'language', tone: 'purple' },
+            label: 'Study language',
+            value: PROFILE.studyLanguage,
+            onPress: () => navigation.navigate('Language'),
+          },
+          {
+            key: 'quiz',
+            icon: { set: 'mci', name: 'target', tone: 'gray' },
+            label: 'Quiz settings',
+            value: PROFILE.quizSummary,
+            onPress: () => navigation.navigate('QuizSettings'),
+          },
+          // Not in the mockup, kept on purpose.
+          {
+            key: 'driving',
+            icon: { set: 'ion', name: 'car-sport', tone: 'blue' },
+            label: 'Practical driving',
+            value: 'Foglio rosa & lessons',
+            onPress: () => navigation.navigate('MainTabs', { screen: 'PracticalDriving' }),
+          },
+        ],
+      },
+      {
+        key: 'app',
+        title: 'APP',
+        items: [
+          {
+            key: 'appearance',
+            icon: { set: 'ion', name: 'moon-outline', tone: 'gray' },
+            label: 'Appearance',
+            value: mode.charAt(0).toUpperCase() + mode.slice(1),
+            onPress: toggleTheme,
+          },
+          {
+            key: 'offline',
+            icon: { set: 'ion', name: 'download-outline', tone: 'gray' },
+            label: 'Offline downloads',
+            value: PROFILE.offlineSize,
+            // TODO: navigate to the downloads manager.
+            onPress: () => comingSoon('Offline downloads'),
+          },
+        ],
+      },
+      {
+        key: 'account',
+        title: 'ACCOUNT',
+        items: [
+          {
+            key: 'store',
+            icon: { set: 'mci', name: 'crown-outline', tone: 'orange' },
+            label: 'Store & licence key',
+            value: PROFILE.licenceDaysLabel,
+            onPress: () => navigation.navigate('Paywall'),
+          },
+          {
+            key: 'web',
+            icon: { set: 'ion', name: 'qr-code-outline', tone: 'gray' },
+            label: 'Login on web app',
+            // TODO: open the QR scanner / web login flow.
+            onPress: () => comingSoon('Login on web app'),
+          },
+          {
+            key: 'form',
+            icon: { set: 'ion', name: 'document-text-outline', tone: 'gray' },
+            label: 'TT2112 form (PDF)',
+            // TODO: open / download the PDF (Linking.openURL or expo-file-system + sharing).
+            onPress: () => comingSoon('TT2112 form'),
+          },
+          {
+            key: 'support',
+            icon: { set: 'ion', name: 'help-circle-outline', tone: 'gray' },
+            label: 'Support 24h',
+            onPress: () => navigation.navigate('SupportChat'),
+          },
+          {
+            key: 'logout',
+            icon: { set: 'ion', name: 'log-out-outline', tone: 'red' },
+            label: 'Log out',
+            onPress: handleLogout,
+          },
+        ],
+      },
+    ],
+    [navigation, mode, toggleTheme, comingSoon, handleLogout],
+  );
+
+  const premiumLabel = PROFILE.premiumUntil
+    ? `Full version · until ${formatDate(PROFILE.premiumUntil)}`
+    : 'Get the full version';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: c.screenBg }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* User Profile Header Card */}
-        <View style={styles.profileHeaderRow}>
-          <View style={[styles.avatarBox, { backgroundColor: colors.primaryLight }]}>
-            <Text style={[styles.avatarText, { color: colors.primary }]}>RU</Text>
+        {/* Profile header */}
+        <View style={styles.profileRow}>
+          <View style={[styles.avatar, { backgroundColor: c.avatarBg }]} accessibilityElementsHidden>
+            <Text style={[styles.avatarText, { color: c.avatarText }]}>{getInitials(PROFILE.name)}</Text>
           </View>
 
-          <View style={styles.userInfoCol}>
-            <Text style={[styles.userName, { color: colors.textPrimary }]}>Rahim Uddin</Text>
-            <Text style={[styles.userMeta, { color: colors.textMuted }]}>
-              ID 48213 · rahim@example.com
+          <View style={styles.userInfo}>
+            <Text style={[styles.userName, { color: c.name }]} numberOfLines={1}>
+              {PROFILE.name}
+            </Text>
+            <Text style={[styles.userMeta, { color: c.meta }]} numberOfLines={1}>
+              ID {PROFILE.userId} · {PROFILE.email}
             </Text>
 
-            {/* Premium Validity Crown Badge */}
-            <TouchableOpacity
-              style={[styles.premiumBadge, { backgroundColor: colors.warningLight }]}
+            <Pressable
+              style={[styles.premiumBadge, { backgroundColor: c.badgeBg }]}
               onPress={() => navigation.navigate('Paywall')}
+              accessibilityRole="button"
+              accessibilityLabel={premiumLabel}
             >
-              <Ionicons name="ribbon" size={14} color={colors.warning} />
-              <Text style={[styles.premiumBadgeText, { color: colors.warning }]}>
-                Full version · until 12 Mar 2027
+              <MaterialCommunityIcons name="crown-outline" size={13} color={c.badgeText} />
+              <Text style={[styles.premiumText, { color: c.badgeText }]} numberOfLines={1}>
+                {premiumLabel}
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
 
-        {/* LEARNING Group */}
-        <View style={styles.sectionGroup}>
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>LEARNING</Text>
-          <View style={[styles.groupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => navigation.navigate('MainTabs', { screen: 'Progress' })}
-            >
-              <View style={[styles.menuIconBox, { backgroundColor: '#ECFDF5' }]}>
-                <Ionicons name="stats-chart" size={18} color="#10B981" />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Learning progress</Text>
-              <Text style={[styles.menuValue, { color: colors.textMuted }]}>78% ready</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => navigation.navigate('QuizSettings')}
-            >
-              <View style={[styles.menuIconBox, { backgroundColor: colors.primaryLight }]}>
-                <Ionicons name="car" size={18} color={colors.primary} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Licence category</Text>
-              <Text style={[styles.menuValue, { color: colors.textMuted }]}>Patente B</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => navigation.navigate('Language')}
-            >
-              <View style={[styles.menuIconBox, { backgroundColor: '#F3E8FF' }]}>
-                <Ionicons name="language" size={18} color="#7E22CE" />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Study language</Text>
-              <Text style={[styles.menuValue, { color: colors.textMuted }]}>English</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => navigation.navigate('QuizSettings')}
-            >
-              <View style={[styles.menuIconBox, { backgroundColor: colors.chipBackground }]}>
-                <Ionicons name="settings-outline" size={18} color={colors.textPrimary} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Quiz settings</Text>
-              <Text style={[styles.menuValue, { color: colors.textMuted }]}>30 Q · 20 min</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => navigation.navigate('MainTabs', { screen: 'PracticalDriving' })}
-            >
-              <View style={[styles.menuIconBox, { backgroundColor: '#EFF6FF' }]}>
-                <Ionicons name="car-sport" size={18} color="#2563EB" />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Practical driving</Text>
-              <Text style={[styles.menuValue, { color: colors.textMuted }]}>Foglio rosa & lessons</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
+        {/* Sections */}
+        {sections.map((section) => (
+          <View key={section.key} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: c.sectionTitle }]}>{section.title}</Text>
+            <View style={[styles.card, { backgroundColor: c.cardBg, borderColor: c.cardBorder }]}>
+              {section.items.map((item, i) => (
+                <MenuRow key={item.key} item={item} isLast={i === section.items.length - 1} c={c} />
+              ))}
+            </View>
           </View>
-        </View>
-
-        {/* APP Group */}
-        <View style={styles.sectionGroup}>
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>APP</Text>
-          <View style={[styles.groupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <TouchableOpacity style={styles.menuItem} onPress={toggleTheme}>
-              <View style={[styles.menuIconBox, { backgroundColor: colors.chipBackground }]}>
-                <Ionicons name="moon-outline" size={18} color={colors.textPrimary} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Appearance</Text>
-              <Text style={[styles.menuValue, { color: colors.textMuted }]}>
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity style={styles.menuItem}>
-              <View style={[styles.menuIconBox, { backgroundColor: colors.chipBackground }]}>
-                <Ionicons name="download-outline" size={18} color={colors.textPrimary} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>
-                Offline downloads
-              </Text>
-              <Text style={[styles.menuValue, { color: colors.textMuted }]}>1.2 GB</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ACCOUNT Group */}
-        <View style={styles.sectionGroup}>
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>ACCOUNT</Text>
-          <View style={[styles.groupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => navigation.navigate('Paywall')}
-            >
-              <View style={[styles.menuIconBox, { backgroundColor: colors.warningLight }]}>
-                <Ionicons name="ribbon-outline" size={18} color={colors.warning} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>
-                Store & licence key
-              </Text>
-              <Text style={[styles.menuValue, { color: colors.textMuted }]}>180 days</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity style={styles.menuItem}>
-              <View style={[styles.menuIconBox, { backgroundColor: colors.primaryLight }]}>
-                <Ionicons name="qr-code-outline" size={18} color={colors.primary} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>
-                Login on web app
-              </Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity style={styles.menuItem}>
-              <View style={[styles.menuIconBox, { backgroundColor: colors.chipBackground }]}>
-                <Ionicons name="document-text-outline" size={18} color={colors.textPrimary} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>
-                TT2112 form (PDF)
-              </Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => navigation.navigate('SupportChat')}
-            >
-              <View style={[styles.menuIconBox, { backgroundColor: colors.chipBackground }]}>
-                <Ionicons name="help-circle-outline" size={18} color={colors.textPrimary} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>Support 24h</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <View style={[styles.menuDivider, { backgroundColor: colors.borderLight }]} />
-
-            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-              <View style={[styles.menuIconBox, { backgroundColor: colors.errorLight }]}>
-                <Ionicons name="log-out-outline" size={18} color={colors.error} />
-              </View>
-              <Text style={[styles.menuLabel, { color: colors.error }]}>Log out</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/* Styles (measured from the 780x1688 @2x design E2, values in pt)            */
+/* -------------------------------------------------------------------------- */
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 40,
-    gap: 20,
+    paddingTop: 7.5, // header block starts at y 54.5 (safe area 47 + 7.5)
+    paddingBottom: 24,
   },
-  profileHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  avatarBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+
+  // Profile header
+  profileRow: { flexDirection: 'row', alignItems: 'center' },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  userInfoCol: {
-    flex: 1,
-    gap: 3,
-  },
-  userName: {
     fontSize: 20,
+    lineHeight: 24,
     fontWeight: '800',
+    letterSpacing: -0.3,
+    includeFontPadding: false,
+  },
+  userInfo: { flex: 1, marginLeft: 14 },
+  userName: {
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+    marginBottom: 3.5,
+    includeFontPadding: false,
   },
   userMeta: {
     fontSize: 12,
-    marginBottom: 4,
+    lineHeight: 16,
+    marginBottom: 3.5,
+    includeFontPadding: false,
   },
   premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
+    height: 21,
+    paddingHorizontal: 10,
+    borderRadius: 10.5,
+    gap: 5,
   },
-  premiumBadgeText: {
-    fontSize: 11,
+  premiumText: {
+    fontSize: 10,
+    lineHeight: 13,
     fontWeight: '700',
+    includeFontPadding: false,
   },
-  sectionGroup: {
-    gap: 8,
-  },
+
+  // Sections
+  section: { marginTop: 15 },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '700',
-    letterSpacing: 0.5,
-    marginLeft: 4,
+    letterSpacing: 0.6,
+    marginBottom: 7,
+    includeFontPadding: false,
   },
-  groupCard: {
-    borderRadius: 18,
+  card: {
+    borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
   },
-  menuItem: {
+
+  // Rows: pitch 50 = 48.5 row + 1 full-width divider (+ card border)
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    gap: 12,
+    height: 48.5,
+    paddingLeft: 13,
+    paddingRight: 12,
   },
-  menuIconBox: {
-    width: 36,
-    height: 36,
+  iconBox: {
+    width: 32,
+    height: 32,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 12.5,
   },
-  menuLabel: {
-    fontSize: 15,
-    fontWeight: '600',
+  label: {
     flex: 1,
+    fontSize: 14.5,
+    lineHeight: 20,
+    fontWeight: '500',
+    includeFontPadding: false,
   },
-  menuValue: {
+  value: {
+    flexShrink: 1,
+    marginLeft: 8,
+    marginRight: 5,
     fontSize: 13,
+    lineHeight: 18,
+    includeFontPadding: false,
   },
-  menuDivider: {
-    height: 1,
-    marginLeft: 62,
-  },
+  divider: { height: 1 },
 });
