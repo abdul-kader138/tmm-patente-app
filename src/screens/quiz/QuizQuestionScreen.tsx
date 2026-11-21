@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -146,6 +147,23 @@ export const QuizQuestionScreen: React.FC = () => {
     setWordSheetVisible(true);
   };
 
+  const handleClose = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs');
+    }
+  }, [navigation]);
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleClose();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [handleClose]);
+
   const isCorrect = selectedAnswer === 'V';
 
   /* -------------------------------------------------------------------------- */
@@ -224,7 +242,7 @@ export const QuizQuestionScreen: React.FC = () => {
       <View style={styles.header}>
         <TouchableOpacity
           style={[styles.closeBtn, { backgroundColor: colors.closeBtnBg }]}
-          onPress={() => navigation.goBack()}
+          onPress={handleClose}
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="Close quiz"
