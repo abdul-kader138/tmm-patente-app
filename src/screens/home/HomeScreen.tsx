@@ -217,7 +217,9 @@ export const HomeScreen: React.FC = () => {
                     borderColor: isDark ? '#1E2740' : '#EAECF0',
                   },
                 ]}
-                onPress={() => navigation.navigate('VideoLessons')}
+                onPress={() =>
+                  navigation.navigate('MainTabs', { screen: 'Learn' })
+                }
                 activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel="Lessons, 124 videos"
@@ -260,7 +262,9 @@ export const HomeScreen: React.FC = () => {
                     borderColor: isDark ? '#1E2740' : '#EAECF0',
                   },
                 ]}
-                onPress={() => navigation.navigate('Topics')}
+                onPress={() =>
+                  navigation.navigate('MainTabs', { screen: 'Topics' })
+                }
                 activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel="Topics, 25 chapters"
@@ -428,7 +432,9 @@ export const HomeScreen: React.FC = () => {
                     borderColor: isDark ? '#1E2740' : '#EAECF0',
                   },
                 ]}
-                onPress={() => navigation.navigate('RoadSigns')}
+                onPress={() =>
+                  navigation.navigate('MainTabs', { screen: 'RoadSigns' })
+                }
                 activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel="Road signs, 400 plus signs"

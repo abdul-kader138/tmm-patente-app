@@ -14,7 +14,6 @@ import { QuizQuestionScreen } from '../screens/quiz/QuizQuestionScreen';
 import { ExamSimulationScreen } from '../screens/quiz/ExamSimulationScreen';
 import { ExamResultScreen } from '../screens/quiz/ExamResultScreen';
 import { ReviewScreen } from '../screens/quiz/ReviewScreen';
-import { RoadSignsScreen } from '../screens/learn/RoadSignsScreen';
 import { EClassScreen } from '../screens/learn/EClassScreen';
 import { TeacherChatScreen } from '../screens/chat/TeacherChatScreen';
 import { SupportChatScreen } from '../screens/chat/SupportChatScreen';
@@ -31,7 +30,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export const RootNavigator: React.FC = () => {
   return (
     <Stack.Navigator
-      initialRouteName="QuizQuestion"
+      initialRouteName="MainTabs"
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
@@ -46,7 +45,6 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen name="LessonPlayer" component={LessonPlayerScreen} />
       <Stack.Screen name="Topics" component={TopicsScreen} />
       <Stack.Screen name="Chapter" component={ChapterScreen} />
-      <Stack.Screen name="RoadSigns" component={RoadSignsScreen} />
       <Stack.Screen name="EClass" component={EClassScreen} />
 
       {/* Quiz & Exam */}

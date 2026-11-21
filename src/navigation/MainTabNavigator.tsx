@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MainTabParamList } from './types';
 import { useTheme } from '../theme/ThemeContext';
@@ -23,6 +24,9 @@ const TabVideoIcon: React.FC<{ color: string; size?: number }> = ({ color, size 
 
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { VideoLessonsScreen } from '../screens/learn/VideoLessonsScreen';
+import { RoadSignsScreen } from '../screens/learn/RoadSignsScreen';
+import { TopicsScreen } from '../screens/learn/TopicsScreen';
+import { ChapterScreen } from '../screens/learn/ChapterScreen';
 import { QuizChallengeScreen } from '../screens/challenges/QuizChallengeScreen';
 import { DictionaryScreen } from '../screens/dictionary/DictionaryScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
@@ -42,6 +46,7 @@ export const MainTabNavigator: React.FC = () => {
 
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -86,21 +91,63 @@ export const MainTabNavigator: React.FC = () => {
       <Tab.Screen
         name="Learn"
         component={VideoLessonsScreen}
+        options={({ navigation }) => {
+          const state = navigation.getState();
+          const currentRoute = state?.routes[state?.index]?.name;
+          const isLearnSection =
+            currentRoute === 'Learn' ||
+            currentRoute === 'RoadSigns' ||
+            currentRoute === 'Topics' ||
+            currentRoute === 'Chapter';
+
+          return {
+            tabBarLabel: 'Learn',
+            tabBarLabelStyle: {
+              fontSize: 11,
+              fontWeight: '700',
+              marginTop: 2,
+              color: isLearnSection ? activeColor : inactiveColor,
+            },
+            tabBarIcon: () => (
+              <View
+                style={[
+                  styles.iconContainer,
+                  isLearnSection && { backgroundColor: activePillBg },
+                ]}
+              >
+                <TabVideoIcon
+                  color={isLearnSection ? activeColor : inactiveColor}
+                  size={22}
+                />
+              </View>
+            ),
+          };
+        }}
+      />
+
+      {/* Hidden sub-screens inside the Learn tab flow (Figma: tab bar visible with Learn highlighted) */}
+      <Tab.Screen
+        name="RoadSigns"
+        component={RoadSignsScreen}
         options={{
-          tabBarLabel: 'Learn',
-          tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.iconContainer,
-                focused && { backgroundColor: activePillBg },
-              ]}
-            >
-              <TabVideoIcon
-                color={focused ? activeColor : inactiveColor}
-                size={22}
-              />
-            </View>
-          ),
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+        }}
+      />
+      <Tab.Screen
+        name="Topics"
+        component={TopicsScreen}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
+        }}
+      />
+      <Tab.Screen
+        name="Chapter"
+        component={ChapterScreen}
+        options={{
+          tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
         }}
       />
 

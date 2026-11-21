@@ -3,6 +3,9 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 export type MainTabParamList = {
   Home: undefined;
   Learn: undefined;
+  RoadSigns: undefined;
+  Topics: undefined;
+  Chapter: { chapterId?: number; title?: string } | undefined;
   Practice: undefined;
   Dictionary: undefined;
   Me: undefined;
@@ -21,7 +24,6 @@ export type RootStackParamList = {
   ExamSimulation: undefined;
   ExamResult: { examId?: number; score?: number; passed?: boolean } | undefined;
   Review: undefined;
-  RoadSigns: undefined;
   EClass: undefined;
   TeacherChat: undefined;
   SupportChat: undefined;
